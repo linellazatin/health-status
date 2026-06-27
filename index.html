@@ -39,7 +39,6 @@
             padding-bottom: 1rem;
         }
 
-        /* --- NEW: Hero Stat Styling --- */
         .hero-stat-container {
             text-align: center;
             margin-bottom: 2rem;
@@ -68,10 +67,9 @@
 
         .hero-value span {
             font-size: 1.5rem;
-            color: var(--cf-orange); /* Gives the unit a slight accent color */
+            color: var(--cf-orange);
             margin-left: 5px;
         }
-        /* ------------------------------ */
 
         h2 {
             font-size: 1.2rem;
@@ -169,10 +167,6 @@
         metrics: 'mypeptideapp_health_metrics.csv'
     };
 
-    /**
-     * Added a fourth parameter (onDataLoaded) to allow us to run custom logic
-     * after the CSV is parsed, like extracting the latest weight.
-     */
     function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoaded = null) {
         Papa.parse(filename, {
             download: true,
@@ -181,7 +175,6 @@
             complete: function(results) {
                 renderTable(results.data, containerId, columnsToShow);
                 
-                // If a custom callback function was provided, run it now
                 if (onDataLoaded) {
                     onDataLoaded(results.data);
                 }
@@ -228,21 +221,15 @@
 
         const metricColumns = ["Date", "Metric Type", "Value 1", "Unit"];
         
-        // Pass a custom callback function to extract the latest weight
         loadAndRenderCSV(FILES.metrics, "metrics-container", metricColumns, function(data) {
             
-            // 1. Filter the CSV data to only include rows where Metric Type is "Weight"
             const weightRecords = data.filter(row => row["Metric Type"] === "Weight" && row["Value 1"]);
             
             if (weightRecords.length > 0) {
-                // 2. Sort the array by Date in descending order (newest first)
-                // This ensures it always grabs the latest value, even if the CSV is exported out of order
                 weightRecords.sort((a, b) => new Date(b.Date) - new Date(a.Date));
                 
-                // 3. Grab the first item (the newest one)
                 const latestWeight = weightRecords[0];
                 
-                // 4. Update the HTML
                 document.getElementById('latest-weight').innerHTML = `${latestWeight["Value 1"]} <span>${latestWeight["Unit"]}</span>`;
             } else {
                 document.getElementById('latest-weight').innerHTML = `N/A`;
