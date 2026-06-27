@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lines' Health</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        /* Cloudflare-inspired Dark Mode Theme */
+        :root {
+            --bg-color: #0f1115; 
+            --surface-color: #1c2128;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --cf-orange: #f38020;
+            --hover-bg: #22272e;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        /* --- NEW: Hero Stat Styling --- */
+        .hero-stat-container {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+
+        .hero-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .hero-value {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .hero-value span {
+            font-size: 1.5rem;
+            color: var(--cf-orange); /* Gives the unit a slight accent color */
+            margin-left: 5px;
+        }
+        /* ------------------------------ */
+
+        h2 {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--text-main);
+            margin-top: 0;
+        }
+
+        .card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .loading {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .error {
+            color: #ff7b72;
+            background-color: rgba(255, 123, 114, 0.1);
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 123, 114, 0.4);
+        }
+
+        footer {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>My Health</h1>
+
+    <div class="hero-stat-container">
+        <div class="hero-label">Latest Weight</div>
+        <div class="hero-value" id="latest-weight">
+            -- <span>kg</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Peptide Logs</h2>
+        <div class="table-container" id="logs-container">
+            <p class="loading">Loading logs...</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Health Metrics</h2>
+        <div class="table-container" id="metrics-container">
+            <p class="loading">Loading metrics...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const FILES = {
+        logs: 'mypeptideapp_peptide_logs.csv',
+        metrics: 'mypeptideapp_health_metrics.csv'
+    };
+
+    /**
+     * Added a fourth parameter (onDataLoaded) to allow us to run custom logic
+     * after the CSV is parsed, like extracting the latest weight.
+     */
+    function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoaded = null) {
+        Papa.parse(filename, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                renderTable(results.data, containerId, columnsToShow);
+                
+                // If a custom callback function was provided, run it now
+                if (onDataLoaded) {
+                    onDataLoaded(results.data);
+                }
+            },
+            error: function(error) {
+                document.getElementById(containerId).innerHTML = 
+                    `<div class="error">Error loading ${filename}: ${error.message}. Ensure the file exists in the same directory.</div>`;
+            }
+        });
+    }
+
+    function renderTable(data, containerId, columnsToShow) {
+        const container = document.getElementById(containerId);
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p class="loading">No data found in file.</p>';
+            return;
+        }
+
+        let tableHtml = '<table><thead><tr>';
+        
+        columnsToShow.forEach(col => {
+            tableHtml += `<th>${col}</th>`;
+        });
+        tableHtml += '</tr></thead><tbody>';
+
+        data.forEach(row => {
+            tableHtml += '<tr>';
+            columnsToShow.forEach(col => {
+                const cellValue = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
+                tableHtml += `<td>${cellValue}</td>`;
+            });
+            tableHtml += '</tr>';
+        });
+
+        tableHtml += '</tbody></table>';
+        container.innerHTML = tableHtml;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        
+        const logColumns = ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"];
+        loadAndRenderCSV(FILES.logs, "logs-container", logColumns);
+
+        const metricColumns = ["Date", "Metric Type", "Value 1", "Unit"];
+        
+        // Pass a custom callback function to extract the latest weight
+        loadAndRenderCSV(FILES.metrics, "metrics-container", metricColumns, function(data) {
+            
+            // 1. Filter the CSV data to only include rows where Metric Type is "Weight"
+            const weightRecords = data.filter(row => row["Metric Type"] === "Weight" && row["Value 1"]);
+            
+            if (weightRecords.length > 0) {
+                // 2. Sort the array by Date in descending order (newest first)
+                // This ensures it always grabs the latest value, even if the CSV is exported out of order
+                weightRecords.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+                
+                // 3. Grab the first item (the newest one)
+                const latestWeight = weightRecords[0];
+                
+                // 4. Update the HTML
+                document.getElementById('latest-weight').innerHTML = `${latestWeight["Value 1"]} <span>${latestWeight["Unit"]}</span>`;
+            } else {
+                document.getElementById('latest-weight').innerHTML = `N/A`;
+            }
+        });
+        
+    });
+</script>
+<footer>
+    <address>
+        data exported from <a href="https://mypeptideapp.com/landing">MyPeptideApp</a>
+    </address>
+</footer>
+</body>
+</html>
