@@ -38,7 +38,7 @@ Uses `wrangler.jsonc` for Cloudflare deployment:
 
 - Assets directory: root (`.`)
 - Node.js compatibility flags enabled
-- Observability tracking enabled (for Cloudflare only)
+- Observability tracking enabled
 
 ### Deployment
 
