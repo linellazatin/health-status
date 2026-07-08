@@ -8,18 +8,17 @@ jobs:
     steps:
       - name: Send Google Chat Message
         run: |
-          # Escape quotes and newlines in the commit message to prevent JSON parsing errors
+          # cleanup commit msg
           COMMIT_MSG=$(cat << 'EOF' | jq -Rs .
           ${{ github.event.head_commit.message }}
           EOF
           )
-          
-          # Strip the outer quotes added by jq for safe injection
+          # remove additional spaces
           COMMIT_MSG=${COMMIT_MSG#\"}
           COMMIT_MSG=${COMMIT_MSG%\"}
 
           curl -X POST -H "Content-Type: application/json" \
           -d "{
-            \"text\": \"🚀 *New Push to ${{ github.repository }}*\nLink: health.llazat.in \n\n*Latest Commit Message:*\n${COMMIT_MSG}\"
+            \"text\": \"🚀 *New Update to ${{ github.repository }}*\nLink: health.llazat.in \n\n*Latest:*\n${COMMIT_MSG}\"
           }" \
           "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}"
