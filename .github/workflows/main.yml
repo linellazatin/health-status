@@ -20,6 +20,6 @@ jobs:
 
           curl -X POST -H "Content-Type: application/json" \
           -d "{
-            \"text\": \"🚀 *New Push to ${{ github.repository }}*\nBranch: *${{ github.ref_name }}*\nUser: *${{ github.actor }}*\n\n*Latest Commit Message:*\n${COMMIT_MSG}\"
+            \"text\": \"🚀 *New Push to ${{ github.repository }}*\nLink: health.llazat.in \n\n*Latest Commit Message:*\n${COMMIT_MSG}\"
           }" \
           "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}"
