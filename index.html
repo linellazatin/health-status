@@ -1,39 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>lines | health</title>
-      <link rel="stylesheet" href="styles.css">
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-   </head>
-   <body>
-      <div class="container">
-         <h1>Current Stats</h1>
-         <div class="hero-stat-container">
-            <div class="hero-label">Latest Weight</div>
-            <div class="hero-value" id="latest-weight">
-               -- <span>kg</span>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>lines | health</title>
+        <link rel="stylesheet" href="styles.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Current Stats</h1>
+            <div class="hero-stat-container" id="hero-stat">
+                <div class="hero-label">Latest Weight</div>
+                <div class="hero-value" id="latest-weight">
+                    -- <span>kg</span>
+                </div>
             </div>
-         </div>
-         <div class="card">
-            <h2>Peptide Logs</h2>
-            <div class="table-container" id="logs-container">
-               <p class="loading">Loading logs...</p>
+            <div class="summary-grid" id="summary-grid"></div>
+
+            <div class="card">
+                <h2>Dose Progression</h2>
+                <div class="table-container" id="logs-container">
+                    <p class="loading">Loading logs...</p>
+                </div>
             </div>
-         </div>
-         <div class="card">
-            <h2>Health Metrics</h2>
-            <div class="table-container" id="metrics-container">
-               <p class="loading">Loading metrics...</p>
+            <div class="card">
+                <h2>Health Metrics</h2>
+                <div class="table-container" id="metrics-container">
+                    <p class="loading">Loading metrics...</p>
+                </div>
             </div>
-         </div>
-      </div>
-      <script src="scripts/fetch.js"></script>
-      <footer>
-         <address>
-            data exported from <a href="https://mypeptideapp.com/landing" target="_blank" rel="noopener noreferrer">MyPeptideApp</a>
-         </address>
-      </footer>
-   </body>
+        </div>
+        <script src="scripts/fetch.js"></script>
+        <footer>
+            <address>
+                data exported from <a href="https://mypeptideapp.com/landing" target="_blank" rel="noopener noreferrer">MyPeptideApp</a>
+            </address>
+        </footer>
+    </body>
 </html>
