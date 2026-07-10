@@ -222,6 +222,44 @@ tr:hover {
     font-weight: 400;
 }
 
+/* Dose chart / bar chart */
+.dose-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.dose-chart-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.dose-chart-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    min-width: 130px;
+}
+.dose-chart-bar-track {
+    flex: 1;
+    height: 24px;
+    background-color: rgba(88, 166, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+.dose-chart-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-blue-light));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+.dose-chart-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    min-width: 50px;
+    text-align: right;
+}
+
 /* Pain tracker */
 .pain-track-item {
     display: flex;

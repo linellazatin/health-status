@@ -180,20 +180,27 @@ function getPainLabel(pain) {
 document.addEventListener("DOMContentLoaded", () => {
     const logColumns = ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"];
     loadAndRenderCSV(FILES.logs, "logs-container", logColumns, function(logData) {
+        console.log("=== DOSE PROGRESSION DEBUG ===");
+        console.log("logData length:", logData.length);
+        console.log("logData:", JSON.stringify(logData.slice(0, 3)));
         const doseProgression = calcDoseProgression(logData);
+        console.log("doseProgression:", doseProgression);
         if (doseProgression && doseProgression.length > 0) {
             const container = document.getElementById('logs-container');
-            const timeline = document.createElement('div');
-            timeline.className = 'dose-timeline';
-            doseProgression.forEach(item => {
+            const maxDose = Math.max(...doseProgression.map(d => d.dose), 1);
+            container.innerHTML = '<div class="dose-chart"><h3>Dose Progression</h3>';
+            doseProgression.forEach((item, i) => {
                 const relative = formatRelativeDate(item.date);
-                timeline.innerHTML += `<div class="dose-timeline-item">
-                    <div class="dose-timeline-dot"></div>
-                    <div class="dose-timeline-date">${formatDate(item.date)} (${relative})</div>
-                    <div class="dose-timeline-dose">${item.dose} <span class="unit">${item.unit}</span></div>
+                const pct = (item.dose / maxDose * 100).toFixed(0);
+                container.innerHTML += `<div class="dose-chart-item">
+                    <div class="dose-chart-date">${formatDate(item.date)} (${relative})</div>
+                    <div class="dose-chart-bar-track">
+                        <div class="dose-chart-bar" style="width: ${pct}%"></div>
+                    </div>
+                    <div class="dose-chart-value">${item.dose}mg</div>
                 </div>`;
             });
-            container.innerHTML = timeline.innerHTML;
+            container.innerHTML += '</div>';
         }
 
         const painTracking = calcPainTracking(logData);
