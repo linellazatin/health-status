@@ -182,31 +182,38 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAndRenderCSV(FILES.logs, "logs-container", logColumns, function(logData) {
         console.log("=== LOGS LOADED ===", logData.length, "rows");
         console.log("KEYS:", Object.keys(logData[0] || {}));
-        if (logData.length > 0) {
-            const doseProgression = calcDoseProgression(logData);
-            console.log("DOSE ITEMS:", doseProgression ? doseProgression.length : 0);
-            if (doseProgression && doseProgression.length > 0) {
-                const container = document.getElementById('logs-container');
-                if (!container) { console.error("CONTAINER MISSING"); return; }
-                const latestFirst = doseProgression.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
-                let html = '<table><thead><tr>';
+        console.log("SAMPLE DATA:", JSON.stringify(logData.slice(0, 2)));
+        const container = document.getElementById('logs-container');
+        if (!container) { console.error("CONTAINER MISSING"); return; }
+        
+        if (logData.length === 0) {
+            container.innerHTML = '<p class="loading">No data found.</p>';
+            return;
+        }
+        
+        const doseProgression = calcDoseProgression(logData);
+        console.log("DOSE ITEMS:", doseProgression ? doseProgression.length : 0, "items");
+        console.log("SAMPLE DOSE:", JSON.stringify(doseProgression.slice(0, 2)));
+        
+        if (doseProgression && doseProgression.length > 0) {
+            const latestFirst = doseProgression.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+            let html = '<table><thead><tr>';
+            ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            latestFirst.forEach(row => {
+                html += '<tr>';
                 ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
-                    html += `<th>${col}</th>`;
+                    const val = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
+                    html += `<td>${val}</td>`;
                 });
-                html += '</tr></thead><tbody>';
-                latestFirst.forEach(row => {
-                    html += '<tr>';
-                    ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
-                        const val = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
-                        html += `<td>${val}</td>`;
-                    });
-                    html += '</tr>';
-                });
-                html += '</tbody></table>';
-                container.innerHTML = html;
-            } else {
-                console.error("DOSE PROGRESSION EMPTY");
-            }
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p class="loading">No dose data found.</p>';
         }
 
         const painTracking = calcPainTracking(logData);
@@ -251,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Weight trend chart
+    // Weight trend line chart
     Papa.parse(FILES.metrics, {
         download: true,
         header: true,
@@ -259,30 +266,70 @@ document.addEventListener("DOMContentLoaded", () => {
         complete: function(results) {
             const container = document.getElementById('weight-trend-container');
             const weightRecords = results.data.filter(row => row["Metric Type"] === "Weight" && row["Value 1"]);
-            if (weightRecords.length > 0) {
-                weightRecords.sort((a, b) => new Date(b.Date) - new Date(a.Date));
-                const values = weightRecords.map(r => parseFloat(r["Value 1"]) || 0);
-                const maxVal = Math.max(...values, 1);
-                container.innerHTML = '<div class="weight-chart">';
-                weightRecords.forEach((row, i) => {
-                    const val = parseFloat(row["Value 1"]);
-                    const pct = (val / maxVal * 100).toFixed(0);
-                    container.innerHTML += `<div class="weight-chart-item">
-                        <div class="weight-chart-date">${formatDate(row.Date)}</div>
-                        <div class="weight-chart-bar-track">
-                            <div class="weight-chart-bar" style="width: ${pct}%"></div>
-                        </div>
-                        <div class="weight-chart-value">${val}kg</div>
-                    </div>`;
-                });
-                container.innerHTML += '</div>';
-            } else {
+            
+            if (weightRecords.length === 0) {
                 container.innerHTML = '<p class="loading">No weight data found.</p>';
+                return;
             }
+            
+            // Sort by date ascending for line chart
+            weightRecords.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+            const values = weightRecords.map(r => parseFloat(r["Value 1"]) || 0);
+            const dates = weightRecords.map(r => r.Date);
+            const minVal = Math.min(...values);
+            const maxVal = Math.max(...values);
+            const padding = (maxVal - minVal) * 0.1;
+            const chartMin = Math.max(0, minVal - padding);
+            const chartMax = maxVal + padding;
+            const range = chartMax - chartMin || 1;
+            
+            const width = container.clientWidth || 600;
+            const height = 250;
+            const paddingX = 60;
+            const paddingY = 40;
+            const chartWidth = width - paddingX * 2;
+            const chartHeight = height - paddingY * 2;
+            
+            let svgHtml = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+                <g transform="translate(${paddingX}, ${paddingY})">
+                    <!-- Grid lines and Y-axis labels -->
+                    ${Array.from({length: 5}, (_, i) => {
+                        const y = chartHeight - (i / 4) * chartHeight;
+                        const val = chartMin + (i / 4) * range;
+                        return `<g>
+                            <line x1="0" y1="${y}" x2="${chartWidth}" y2="${y}" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3"/>
+                            <text x="-10" y="${y + 4}" text-anchor="end" font-size="12" fill="var(--text-muted)">${val.toFixed(1)}</text>
+                        </g>`;
+                    }).join('')}
+                    
+                    <!-- X-axis labels -->
+                    ${dates.map((date, i) => {
+                        const x = (i / (dates.length - 1 || 1)) * chartWidth;
+                        return `<g transform="translate(${x}, ${chartHeight})">
+                            <text y="14" text-anchor="middle" font-size="11" fill="var(--text-muted)">${formatDate(date)}</text>
+                        </g>`;
+                    }).join('')}
+                    
+                    <!-- Line path -->
+                    <polyline points="${dates.map((date, i) => {
+                        const x = (i / (dates.length - 1 || 1)) * chartWidth;
+                        const y = chartHeight - ((values[i] - chartMin) / range) * chartHeight;
+                        return `${x},${y}`;
+                    }).join(' ')}" fill="none" stroke="var(--accent-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    
+                    <!-- Data points -->
+                    ${dates.map((date, i) => {
+                        const x = (i / (dates.length - 1 || 1)) * chartWidth;
+                        const y = chartHeight - ((values[i] - chartMin) / range) * chartHeight;
+                        return `<circle cx="${x}" cy="${y}" r="5" fill="var(--accent-blue)" stroke="white" stroke-width="2"/>`;
+                    }).join('')}
+                </g>
+            </svg>`;
+            
+            container.innerHTML = `<div class="weight-chart-container">${svgHtml}</div>`;
         },
         error: function(error) {
-            document.getElementById('weight-trend-container').innerHTML =
-                `<div class="error">Error loading metrics: ${error.message}</div>`;
+            container.innerHTML = `<div class="error">Error loading metrics: ${error.message}</div>`;
         }
     });
 

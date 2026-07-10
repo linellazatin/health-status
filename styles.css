@@ -261,6 +261,16 @@ tr:hover {
     text-align: right;
 }
 
+/* Weight trend line chart */
+.weight-chart-container {
+    width: 100%;
+    overflow-x: auto;
+}
+.weight-chart-container svg {
+    display: block;
+    margin: 0 auto;
+}
+
 /* Pain tracker */
 .pain-track-item {
     display: flex;
