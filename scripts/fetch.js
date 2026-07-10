@@ -97,7 +97,7 @@ function calcWeightTrend(data) {
     weightRecords.sort((a, b) => new Date(b.Date) - new Date(a.Date));
     const values = weightRecords.map(r => parseFloat(r["Value 1"]) || 0);
     const trend = getTrendDirection(values);
-    return { values, trend, first: values[values.length - 1], last: values[0] };
+    return { values, sortedValues: weightRecords.map(r => r.Date), trend, first: values[values.length - 1], last: values[0] };
 }
 
 function calcDoseProgression(data) {
@@ -180,24 +180,40 @@ function getPainLabel(pain) {
 document.addEventListener("DOMContentLoaded", () => {
     const logColumns = ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"];
     loadAndRenderCSV(FILES.logs, "logs-container", logColumns, function(logData) {
-        console.log("=== DOSE PROGRESSION DEBUG ===");
-        console.log("logData length:", logData.length);
-        console.log("logData:", JSON.stringify(logData.slice(0, 3)));
         const doseProgression = calcDoseProgression(logData);
-        console.log("doseProgression:", doseProgression);
         if (doseProgression && doseProgression.length > 0) {
             const container = document.getElementById('logs-container');
-            const maxDose = Math.max(...doseProgression.map(d => d.dose), 1);
-            container.innerHTML = '<div class="dose-chart"><h3>Dose Progression</h3>';
-            doseProgression.forEach((item, i) => {
-                const relative = formatRelativeDate(item.date);
-                const pct = (item.dose / maxDose * 100).toFixed(0);
-                container.innerHTML += `<div class="dose-chart-item">
-                    <div class="dose-chart-date">${formatDate(item.date)} (${relative})</div>
-                    <div class="dose-chart-bar-track">
-                        <div class="dose-chart-bar" style="width: ${pct}%"></div>
+            const latestFirst = doseProgression.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+            container.innerHTML = '<table><thead><tr>';
+            ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
+                container.innerHTML += `<th>${col}</th>`;
+            });
+            container.innerHTML += '</tr></thead><tbody>';
+            latestFirst.forEach(row => {
+                container.innerHTML += '<tr>';
+                ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
+                    const val = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
+                    container.innerHTML += `<td>${val}</td>`;
+                });
+                container.innerHTML += '</tr>';
+            });
+            container.innerHTML += '</tbody></table>';
+        }
+
+        const weightChart = calcWeightTrend(logData);
+        if (weightChart && weightChart.values.length > 0) {
+            const container = document.getElementById('logs-container');
+            container.innerHTML += '<h3>Weight Trend</h3><div class="weight-chart">';
+            weightChart.values.forEach((val, i) => {
+                const date = weightChart.sortedValues[i];
+                const maxVal = Math.max(...weightChart.values, 1);
+                const pct = (val / maxVal * 100).toFixed(0);
+                container.innerHTML += `<div class="weight-chart-item">
+                    <div class="weight-chart-date">${formatDate(date)}</div>
+                    <div class="weight-chart-bar-track">
+                        <div class="weight-chart-bar" style="width: ${pct}%"></div>
                     </div>
-                    <div class="dose-chart-value">${item.dose}mg</div>
+                    <div class="weight-chart-value">${val}kg</div>
                 </div>`;
             });
             container.innerHTML += '</div>';
