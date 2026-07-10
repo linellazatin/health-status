@@ -3,23 +3,27 @@ const FILES = {
     metrics: 'mypeptideapp_health_metrics.csv'
 };
 
-function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoaded = null) {
-    Papa.parse(filename, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-            renderTable(results.data, containerId, columnsToShow);
+async function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoaded = null) {
+    try {
+        const response = await fetch(window.location.origin + filename);
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const text = await response.text();
+        const results = Papa.parse(text, {
+            header: true,
+            skipEmptyLines: true
+        });
+        console.log(`LOADED ${filename}:`, results.data.length, 'rows');
+        console.log('HEADERS:', Object.keys(results.data[0] || {}));
+        
+        renderTable(results.data, containerId, columnsToShow);
 
-            if (onDataLoaded) {
-                onDataLoaded(results.data);
-            }
-        },
-        error: function(error) {
-            document.getElementById(containerId).innerHTML =
-                `<div class="error">Error loading ${filename}: ${error.message}. Ensure the file exists in the same directory.</div>`;
+        if (onDataLoaded) {
+            onDataLoaded(results.data);
         }
-    });
+    } catch (error) {
+        document.getElementById(containerId).innerHTML =
+            `<div class="error">Error loading ${filename}: ${error.message}</div>`;
+    }
 }
 
 function renderTable(data, containerId, columnsToShow) {
@@ -259,78 +263,70 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Weight trend line chart
-    Papa.parse(FILES.metrics, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-            const container = document.getElementById('weight-trend-container');
-            const weightRecords = results.data.filter(row => row["Metric Type"] === "Weight" && row["Value 1"]);
-            
-            if (weightRecords.length === 0) {
-                container.innerHTML = '<p class="loading">No weight data found.</p>';
-                return;
-            }
-            
-            // Sort by date ascending for line chart
-            weightRecords.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-            const values = weightRecords.map(r => parseFloat(r["Value 1"]) || 0);
-            const dates = weightRecords.map(r => r.Date);
-            const minVal = Math.min(...values);
-            const maxVal = Math.max(...values);
-            const padding = (maxVal - minVal) * 0.1;
-            const chartMin = Math.max(0, minVal - padding);
-            const chartMax = maxVal + padding;
-            const range = chartMax - chartMin || 1;
-            
-            const width = container.clientWidth || 600;
-            const height = 250;
-            const paddingX = 60;
-            const paddingY = 40;
-            const chartWidth = width - paddingX * 2;
-            const chartHeight = height - paddingY * 2;
-            
-            let svgHtml = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-                <g transform="translate(${paddingX}, ${paddingY})">
-                    <!-- Grid lines and Y-axis labels -->
-                    ${Array.from({length: 5}, (_, i) => {
-                        const y = chartHeight - (i / 4) * chartHeight;
-                        const val = chartMin + (i / 4) * range;
-                        return `<g>
-                            <line x1="0" y1="${y}" x2="${chartWidth}" y2="${y}" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3"/>
-                            <text x="-10" y="${y + 4}" text-anchor="end" font-size="12" fill="var(--text-muted)">${val.toFixed(1)}</text>
-                        </g>`;
-                    }).join('')}
-                    
-                    <!-- X-axis labels -->
-                    ${dates.map((date, i) => {
-                        const x = (i / (dates.length - 1 || 1)) * chartWidth;
-                        return `<g transform="translate(${x}, ${chartHeight})">
-                            <text y="14" text-anchor="middle" font-size="11" fill="var(--text-muted)">${formatDate(date)}</text>
-                        </g>`;
-                    }).join('')}
-                    
-                    <!-- Line path -->
-                    <polyline points="${dates.map((date, i) => {
-                        const x = (i / (dates.length - 1 || 1)) * chartWidth;
-                        const y = chartHeight - ((values[i] - chartMin) / range) * chartHeight;
-                        return `${x},${y}`;
-                    }).join(' ')}" fill="none" stroke="var(--accent-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                    
-                    <!-- Data points -->
-                    ${dates.map((date, i) => {
-                        const x = (i / (dates.length - 1 || 1)) * chartWidth;
-                        const y = chartHeight - ((values[i] - chartMin) / range) * chartHeight;
-                        return `<circle cx="${x}" cy="${y}" r="5" fill="var(--accent-blue)" stroke="white" stroke-width="2"/>`;
-                    }).join('')}
-                </g>
-            </svg>`;
-            
-            container.innerHTML = `<div class="weight-chart-container">${svgHtml}</div>`;
-        },
-        error: function(error) {
-            container.innerHTML = `<div class="error">Error loading metrics: ${error.message}</div>`;
+    loadAndRenderCSV(FILES.metrics, "weight-trend-container", null, function(data) {
+        const container = document.getElementById('weight-trend-container');
+        const weightRecords = data.filter(row => row["Metric Type"] === "Weight" && row["Value 1"]);
+        
+        if (weightRecords.length === 0) {
+            container.innerHTML = '<p class="loading">No weight data found.</p>';
+            return;
         }
+        
+        // Sort by date ascending for line chart
+        weightRecords.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+        const values = weightRecords.map(r => parseFloat(r["Value 1"]) || 0);
+        const dates = weightRecords.map(r => r.Date);
+        const minVal = Math.min(...values);
+        const maxVal = Math.max(...values);
+        const padding = (maxVal - minVal) * 0.1;
+        const chartMin = Math.max(0, minVal - padding);
+        const chartMax = maxVal + padding;
+        const range = chartMax - chartMin || 1;
+        
+        const width = container.clientWidth || 600;
+        const height = 250;
+        const paddingX = 60;
+        const paddingY = 40;
+        const chartWidth = width - paddingX * 2;
+        const chartHeight = height - paddingY * 2;
+        
+        let svgHtml = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(${paddingX}, ${paddingY})">
+                <!-- Grid lines and Y-axis labels -->
+                ${Array.from({length: 5}, (_, i) => {
+                    const y = chartHeight - (i / 4) * chartHeight;
+                    const val = chartMin + (i / 4) * range;
+                    return `<g>
+                        <line x1="0" y1="${y}" x2="${chartWidth}" y2="${y}" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3"/>
+                        <text x="-10" y="${y + 4}" text-anchor="end" font-size="12" fill="var(--text-muted)">${val.toFixed(1)}</text>
+                    </g>`;
+                }).join('')}
+                
+                <!-- X-axis labels -->
+                ${dates.map((date, i) => {
+                    const x = (i / (dates.length - 1 || 1)) * chartWidth;
+                    return `<g transform="translate(${x}, ${chartHeight})">
+                        <text y="14" text-anchor="middle" font-size="11" fill="var(--text-muted)">${formatDate(date)}</text>
+                    </g>`;
+                }).join('')}
+                
+                <!-- Line path -->
+                <polyline points="${dates.map((date, i) => {
+                    const x = (i / (dates.length - 1 || 1)) * chartWidth;
+                    const y = chartHeight - ((values[i] - chartMin) / range) * chartHeight;
+                    return `${x},${y}`;
+                }).join(' ')}" fill="none" stroke="var(--accent-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                
+                <!-- Data points -->
+                ${dates.map((date, i) => {
+                    const x = (i / (dates.length - 1 || 1)) * chartWidth;
+                    const y = chartHeight - ((values[i] - chartMin) / range) * chartHeight;
+                    return `<circle cx="${x}" cy="${y}" r="5" fill="var(--accent-blue)" stroke="white" stroke-width="2"/>`;
+                }).join('')}
+            </g>
+        </svg>`;
+        
+        container.innerHTML = `<div class="weight-chart-container">${svgHtml}</div>`;
     });
 
     const metricColumns = ["Date", "Metric Type", "Value 1", "Unit"];
