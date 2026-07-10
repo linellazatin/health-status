@@ -5,7 +5,8 @@ const FILES = {
 
 async function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoaded = null) {
     try {
-        const response = await fetch(window.location.origin + filename);
+        const url = window.location.origin + '/' + filename;
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         const text = await response.text();
         const results = Papa.parse(text, {
