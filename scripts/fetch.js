@@ -180,43 +180,33 @@ function getPainLabel(pain) {
 document.addEventListener("DOMContentLoaded", () => {
     const logColumns = ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"];
     loadAndRenderCSV(FILES.logs, "logs-container", logColumns, function(logData) {
-        const doseProgression = calcDoseProgression(logData);
-        if (doseProgression && doseProgression.length > 0) {
-            const container = document.getElementById('logs-container');
-            const latestFirst = doseProgression.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
-            container.innerHTML = '<table><thead><tr>';
-            ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
-                container.innerHTML += `<th>${col}</th>`;
-            });
-            container.innerHTML += '</tr></thead><tbody>';
-            latestFirst.forEach(row => {
-                container.innerHTML += '<tr>';
+        console.log("=== LOGS LOADED ===", logData.length, "rows");
+        console.log("KEYS:", Object.keys(logData[0] || {}));
+        if (logData.length > 0) {
+            const doseProgression = calcDoseProgression(logData);
+            console.log("DOSE ITEMS:", doseProgression ? doseProgression.length : 0);
+            if (doseProgression && doseProgression.length > 0) {
+                const container = document.getElementById('logs-container');
+                if (!container) { console.error("CONTAINER MISSING"); return; }
+                const latestFirst = doseProgression.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+                let html = '<table><thead><tr>';
                 ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
-                    const val = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
-                    container.innerHTML += `<td>${val}</td>`;
+                    html += `<th>${col}</th>`;
                 });
-                container.innerHTML += '</tr>';
-            });
-            container.innerHTML += '</tbody></table>';
-        }
-
-        const weightChart = calcWeightTrend(logData);
-        if (weightChart && weightChart.values.length > 0) {
-            const container = document.getElementById('logs-container');
-            container.innerHTML += '<h3>Weight Trend</h3><div class="weight-chart">';
-            weightChart.values.forEach((val, i) => {
-                const date = weightChart.sortedValues[i];
-                const maxVal = Math.max(...weightChart.values, 1);
-                const pct = (val / maxVal * 100).toFixed(0);
-                container.innerHTML += `<div class="weight-chart-item">
-                    <div class="weight-chart-date">${formatDate(date)}</div>
-                    <div class="weight-chart-bar-track">
-                        <div class="weight-chart-bar" style="width: ${pct}%"></div>
-                    </div>
-                    <div class="weight-chart-value">${val}kg</div>
-                </div>`;
-            });
-            container.innerHTML += '</div>';
+                html += '</tr></thead><tbody>';
+                latestFirst.forEach(row => {
+                    html += '<tr>';
+                    ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
+                        const val = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
+                        html += `<td>${val}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } else {
+                console.error("DOSE PROGRESSION EMPTY");
+            }
         }
 
         const painTracking = calcPainTracking(logData);
@@ -258,6 +248,41 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             weeklyHtml += '</tbody></table>';
             container.innerHTML = weeklyHtml;
+        }
+    });
+
+    // Weight trend chart
+    Papa.parse(FILES.metrics, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+            const container = document.getElementById('weight-trend-container');
+            const weightRecords = results.data.filter(row => row["Metric Type"] === "Weight" && row["Value 1"]);
+            if (weightRecords.length > 0) {
+                weightRecords.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+                const values = weightRecords.map(r => parseFloat(r["Value 1"]) || 0);
+                const maxVal = Math.max(...values, 1);
+                container.innerHTML = '<div class="weight-chart">';
+                weightRecords.forEach((row, i) => {
+                    const val = parseFloat(row["Value 1"]);
+                    const pct = (val / maxVal * 100).toFixed(0);
+                    container.innerHTML += `<div class="weight-chart-item">
+                        <div class="weight-chart-date">${formatDate(row.Date)}</div>
+                        <div class="weight-chart-bar-track">
+                            <div class="weight-chart-bar" style="width: ${pct}%"></div>
+                        </div>
+                        <div class="weight-chart-value">${val}kg</div>
+                    </div>`;
+                });
+                container.innerHTML += '</div>';
+            } else {
+                container.innerHTML = '<p class="loading">No weight data found.</p>';
+            }
+        },
+        error: function(error) {
+            document.getElementById('weight-trend-container').innerHTML =
+                `<div class="error">Error loading metrics: ${error.message}</div>`;
         }
     });
 
