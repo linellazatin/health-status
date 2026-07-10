@@ -97,7 +97,7 @@ function calcWeightTrend(data) {
     weightRecords.sort((a, b) => new Date(b.Date) - new Date(a.Date));
     const values = weightRecords.map(r => parseFloat(r["Value 1"]) || 0);
     const trend = getTrendDirection(values);
-    return { values, trend, first: values[0], last: values[values.length - 1] };
+    return { values, trend, first: values[values.length - 1], last: values[0] };
 }
 
 function calcDoseProgression(data) {
@@ -179,7 +179,64 @@ function getPainLabel(pain) {
 
 document.addEventListener("DOMContentLoaded", () => {
     const logColumns = ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"];
-    loadAndRenderCSV(FILES.logs, "logs-container", logColumns);
+    loadAndRenderCSV(FILES.logs, "logs-container", logColumns, function(logData) {
+        const doseProgression = calcDoseProgression(logData);
+        if (doseProgression && doseProgression.length > 0) {
+            const container = document.getElementById('logs-container');
+            const timeline = document.createElement('div');
+            timeline.className = 'dose-timeline';
+            doseProgression.forEach(item => {
+                const relative = formatRelativeDate(item.date);
+                timeline.innerHTML += `<div class="dose-timeline-item">
+                    <div class="dose-timeline-dot"></div>
+                    <div class="dose-timeline-date">${formatDate(item.date)} (${relative})</div>
+                    <div class="dose-timeline-dose">${item.dose} <span class="unit">${item.unit}</span></div>
+                </div>`;
+            });
+            container.innerHTML = timeline.innerHTML;
+        }
+
+        const painTracking = calcPainTracking(logData);
+        if (painTracking && painTracking.length > 0) {
+            const container = document.getElementById('metrics-container');
+            const painHtml = '<h3>Pain Level Tracking</h3><div class="pain-track">';
+            painTracking.forEach(item => {
+                const painClass = getPainLevelClass(item.pain);
+                const painLabel = getPainLabel(item.pain);
+                const pct = item.pain !== null ? (item.pain / 5) * 100 : 0;
+                painHtml += `<div class="pain-track-item">
+                    <div class="pain-date">${formatDate(item.date)}</div>
+                    <div class="pain-bar-track">
+                        <div class="pain-bar-fill ${painClass}" style="width: ${pct}%"></div>
+                    </div>
+                    <div class="pain-level-text">${painLabel}</div>
+                    ${item.note ? `<div class="pain-note">${item.note}</div>` : ''}
+                </div>`;
+            });
+            painHtml += '</div>';
+            container.innerHTML = painHtml;
+        }
+
+        const weeklyStats = calcWeeklyStats(logData);
+        if (weeklyStats && weeklyStats.length > 0) {
+            const container = document.getElementById('metrics-container');
+            const weeklyHtml = '<h3>Weekly Injection Summary</h3>';
+            weeklyStats.forEach(ws => {
+                weeklyHtml += `<div class="chart-bar-container">
+                    <div class="chart-bar-label">${ws.week}</div>
+                    <div class="chart-bar-track">
+                        <div class="chart-bar-fill dose" style="width: ${(ws.count / Math.max(weeklyStats.length, 1) * 100).toFixed(0)}%"></div>
+                    </div>
+                </div>`;
+            });
+            weeklyHtml += '<table><thead><tr><th>Week</th><th>Injections</th><th>Total Dose</th></tr></thead><tbody>';
+            weeklyStats.forEach(ws => {
+                weeklyHtml += `<tr><td>${ws.week}</td><td>${ws.count}</td><td>${ws.totalDose} mg</td></tr>`;
+            });
+            weeklyHtml += '</tbody></table>';
+            container.innerHTML = weeklyHtml;
+        }
+    });
 
     const metricColumns = ["Date", "Metric Type", "Value 1", "Unit"];
     loadAndRenderCSV(FILES.metrics, "metrics-container", metricColumns, function(data) {
@@ -188,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (weightTrend && weightTrend.values.length > 0) {
             const container = document.getElementById('latest-weight');
-            let html = `${weightTrend.last} <span>${weightTrend.values[weightTrend.values.length - 1] ? 'kg' : ''}</span>`;
+            let html = `${weightTrend.last} <span>${weightTrend.values[0] ? 'kg' : ''}</span>`;
             const trendClass = weightTrend.trend === 'down' ? 'down' : weightTrend.trend === 'up' ? 'up' : 'flat';
             html += `<div class="trend-indicator ${trendClass}">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -230,63 +287,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>`;
 
             document.querySelector('.hero-stat-container').parentElement.insertBefore(grid, document.querySelector('.card'));
-        }
-
-        const doseProgression = calcDoseProgression(data);
-        if (doseProgression && doseProgression.length > 0) {
-            const container = document.getElementById('logs-container');
-            const timeline = document.createElement('div');
-            timeline.className = 'dose-timeline';
-            doseProgression.forEach(item => {
-                const relative = formatRelativeDate(item.date);
-                timeline.innerHTML += `<div class="dose-timeline-item">
-                    <div class="dose-timeline-dot"></div>
-                    <div class="dose-timeline-date">${formatDate(item.date)} (${relative})</div>
-                    <div class="dose-timeline-dose">${item.dose} <span class="unit">${item.unit}</span></div>
-                </div>`;
-            });
-            container.innerHTML = timeline.innerHTML;
-        }
-
-        const painTracking = calcPainTracking(data);
-        if (painTracking && painTracking.length > 0) {
-            const container = document.getElementById('metrics-container');
-            const painHtml = '<h3>Pain Level Tracking</h3><div class="pain-track">';
-            painTracking.forEach(item => {
-                const painClass = getPainLevelClass(item.pain);
-                const painLabel = getPainLabel(item.pain);
-                const pct = item.pain !== null ? (item.pain / 5) * 100 : 0;
-                painHtml += `<div class="pain-track-item">
-                    <div class="pain-date">${formatDate(item.date)}</div>
-                    <div class="pain-bar-track">
-                        <div class="pain-bar-fill ${painClass}" style="width: ${pct}%"></div>
-                    </div>
-                    <div class="pain-level-text">${painLabel}</div>
-                    ${item.note ? `<div class="pain-note">${item.note}</div>` : ''}
-                </div>`;
-            });
-            painHtml += '</div>';
-            container.innerHTML = painHtml;
-        }
-
-        const weeklyStats = calcWeeklyStats(data);
-        if (weeklyStats && weeklyStats.length > 0) {
-            const container = document.getElementById('metrics-container');
-            const weeklyHtml = '<h3>Weekly Injection Summary</h3>';
-            weeklyStats.forEach(ws => {
-                weeklyHtml += `<div class="chart-bar-container">
-                    <div class="chart-bar-label">${ws.week}</div>
-                    <div class="chart-bar-track">
-                        <div class="chart-bar-fill dose" style="width: ${(ws.count / Math.max(weeklyStats.length, 1) * 100).toFixed(0)}%"></div>
-                    </div>
-                </div>`;
-            });
-            weeklyHtml += '<table><thead><tr><th>Week</th><th>Injections</th><th>Total Dose</th></tr></thead><tbody>';
-            weeklyStats.forEach(ws => {
-                weeklyHtml += `<tr><td>${ws.week}</td><td>${ws.count}</td><td>${ws.totalDose} mg</td></tr>`;
-            });
-            weeklyHtml += '</tbody></table>';
-            container.innerHTML = weeklyHtml;
         }
     });
 
