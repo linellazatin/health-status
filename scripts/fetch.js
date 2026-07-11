@@ -215,27 +215,33 @@ document.addEventListener("DOMContentLoaded", () => {
         if (doseProgression && doseProgression.length > 0) {
             const latestFirst = doseProgression.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
             console.log("RENDERING DOSE TABLE:", latestFirst.length, "rows");
-            console.log("CONTAINER EXISTS:", !!container);
-            console.log("CONTAINER INNERHTML BEFORE:", container.innerHTML.substring(0, 100));
             
             const table = document.createElement('table');
-            let html = '<thead><tr>';
+            const thead = document.createElement('thead');
+            const trHead = document.createElement('tr');
+            
             ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
-                html += `<th>${col}</th>`;
+                const th = document.createElement('th');
+                th.textContent = col;
+                trHead.appendChild(th);
             });
-            html += '</tr></thead><tbody>';
+            thead.appendChild(trHead);
+            table.appendChild(thead);
+            
+            const tbody = document.createElement('tbody');
             latestFirst.forEach(row => {
-                html += '<tr>';
+                const tr = document.createElement('tr');
                 ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
-                    const val = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
-                    html += `<td>${val}</td>`;
+                    const td = document.createElement('td');
+                    td.textContent = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
+                    tr.appendChild(td);
                 });
-                html += '</tr>';
+                tbody.appendChild(tr);
             });
-            html += '</tbody></table>';
-            table.innerHTML = html;
-            console.log("TABLE INNERHTML:", table.innerHTML.substring(0, 200));
-            container.innerHTML = table.innerHTML;
+            table.appendChild(tbody);
+            
+            container.innerHTML = '';
+            container.appendChild(table);
         } else {
             container.innerHTML = '<p class="loading">No dose data found.</p>';
         }
