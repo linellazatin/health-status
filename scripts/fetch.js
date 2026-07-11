@@ -8,7 +8,11 @@ async function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoad
         const url = window.location.origin + '/' + filename;
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        const text = await response.text();
+        let text = await response.text();
+        // Strip BOM (Byte Order Mark) if present
+        if (text.charCodeAt(0) === 0xFEFF) {
+            text = text.slice(1);
+        }
         const results = Papa.parse(text, {
             header: true,
             skipEmptyLines: true
