@@ -191,7 +191,9 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAndRenderCSV(FILES.logs, "logs-container", logColumns, function(logData) {
         console.log("=== LOGS LOADED ===", logData.length, "rows");
         console.log("KEYS:", Object.keys(logData[0] || {}));
+        console.log("HEADER KEYS:", Object.keys(logData[0] || {}));
         console.log("SAMPLE DATA:", JSON.stringify(logData.slice(0, 2)));
+        console.log("LOGCOLUMNS:", logColumns);
         const container = document.getElementById('logs-container');
         if (!container) { console.error("CONTAINER MISSING"); return; }
         
