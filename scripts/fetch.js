@@ -69,33 +69,33 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function formatWeightValue(val) {
-    if (!val) return '-';
-    const num = parseFloat(val);
-    if (isNaN(num)) return val;
-    return num.toFixed(1);
-}
+// function formatWeightValue(val) {
+//     if (!val) return '-';
+//     const num = parseFloat(val);
+//     if (isNaN(num)) return val;
+//     return num.toFixed(1);
+// }
 
-function formatDoseValue(val) {
-    if (!val) return '-';
-    const num = parseFloat(val);
-    if (isNaN(num)) return val;
-    return num.toFixed(1);
-}
+// function formatDoseValue(val) {
+//     if (!val) return '-';
+//     const num = parseFloat(val);
+//     if (isNaN(num)) return val;
+//     return num.toFixed(1);
+// }
 
-function formatRelativeDate(dateStr) {
-    if (!dateStr) return '-';
-    const d = new Date(dateStr);
-    const now = new Date();
-    const diffTime = now - d;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+// function formatRelativeDate(dateStr) {
+//     if (!dateStr) return '-';
+//     const d = new Date(dateStr);
+//     const now = new Date();
+//     const diffTime = now - d;
+//     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'today';
-    if (diffDays === 1) return 'yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return `${Math.floor(diffDays / 30)}mo ago`;
-}
+//     if (diffDays === 0) return 'today';
+//     if (diffDays === 1) return 'yesterday';
+//     if (diffDays < 7) return `${diffDays} days ago`;
+//     if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+//     return `${Math.floor(diffDays / 30)}mo ago`;
+// }
 
 function getTrendDirection(values) {
     if (values.length < 2) return 'flat';
@@ -115,23 +115,23 @@ function calcWeightTrend(data) {
     return { values, sortedValues: weightRecords.map(r => r.Date), trend, first: values[values.length - 1], last: values[0] };
 }
 
-function calcWeeklyStats(data) {
-    if (!data || data.length === 0) return null;
-    const sorted = data.slice().sort((a, b) => new Date(a["Injection Date"]) - new Date(b["Injection Date"]));
-    const weeks = {};
-    sorted.forEach(row => {
-        const d = new Date(row["Injection Date"]);
-        const weekKey = `${d.getFullYear()}-W${Math.ceil(d.getDate() / 7)}`;
-        if (!weeks[weekKey]) weeks[weekKey] = { count: 0, totalDose: 0 };
-        weeks[weekKey].count++;
-        weeks[weekKey].totalDose += (parseFloat(row["Dose"]) || 0);
-    });
-    return Object.entries(weeks).map(([key, val]) => ({
-        week: key,
-        count: val.count,
-        totalDose: val.totalDose.toFixed(1)
-    }));
-}
+// function calcWeeklyStats(data) {
+//     if (!data || data.length === 0) return null;
+//     const sorted = data.slice().sort((a, b) => new Date(a["Injection Date"]) - new Date(b["Injection Date"]));
+//     const weeks = {};
+//     sorted.forEach(row => {
+//         const d = new Date(row["Injection Date"]);
+//         const weekKey = `${d.getFullYear()}-W${Math.ceil(d.getDate() / 7)}`;
+//         if (!weeks[weekKey]) weeks[weekKey] = { count: 0, totalDose: 0 };
+//         weeks[weekKey].count++;
+//         weeks[weekKey].totalDose += (parseFloat(row["Dose"]) || 0);
+//     });
+//     return Object.entries(weeks).map(([key, val]) => ({
+//         week: key,
+//         count: val.count,
+//         totalDose: val.totalDose.toFixed(1)
+//     }));
+// }
 
 
 function calcHealthSummary(metricsData) {
@@ -159,39 +159,34 @@ function calcHealthSummary(metricsData) {
     };
 }
 
-function calcPainTracking(data) {
-    if (!data || data.length === 0) return null;
-    const sorted = data.slice().sort((a, b) => new Date(a["Injection Date"]) - new Date(b["Injection Date"]));
-    return sorted.map(row => ({
-        date: row["Injection Date"],
-        pain: row["Pain Level"] ? parseInt(row["Pain Level"]) : null,
-        note: row["Notes"] || ''
-    }));
-}
+// function calcPainTracking(data) {
+//     if (!data || data.length === 0) return null;
+//     const sorted = data.slice().sort((a, b) => new Date(a["Injection Date"]) - new Date(b["Injection Date"]));
+//     return sorted.map(row => ({
+//         date: row["Injection Date"],
+//         pain: row["Pain Level"] ? parseInt(row["Pain Level"]) : null,
+//         note: row["Notes"] || ''
+//     }));
+// }
 
-function getPainLevelClass(pain) {
-    if (pain === null || pain === undefined) return 'low';
-    if (pain <= 2) return 'low';
-    if (pain <= 4) return 'medium';
-    return 'high';
-}
+// function getPainLevelClass(pain) {
+//     if (pain === null || pain === undefined) return 'low';
+//     if (pain <= 2) return 'low';
+//     if (pain <= 4) return 'medium';
+//     return 'high';
+// }
 
-function getPainLabel(pain) {
-    if (pain === null || pain === undefined) return '-';
-    const labels = ['', 'Minimal', 'Low', 'Moderate', 'High', 'Severe'];
-    return labels[pain] || '';
-}
+// function getPainLabel(pain) {
+//     if (pain === null || pain === undefined) return '-';
+//     const labels = ['', 'Minimal', 'Low', 'Moderate', 'High', 'Severe'];
+//     return labels[pain] || '';
+// }
 
 document.addEventListener("DOMContentLoaded", () => {
     const logColumns = ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"];
     loadAndRenderCSV(FILES.logs, "logs-container", logColumns, function(logData) {
-        console.log("=== LOGS LOADED ===", logData.length, "rows");
-        console.log("KEYS:", Object.keys(logData[0] || {}));
-        console.log("HEADER KEYS:", Object.keys(logData[0] || {}));
-        console.log("SAMPLE DATA:", JSON.stringify(logData.slice(0, 2)));
-        console.log("LOGCOLUMNS:", logColumns);
         const container = document.getElementById('logs-container');
-        if (!container) { console.error("CONTAINER MISSING"); return; }
+        if (!container) return;
         
         if (logData.length === 0) {
             container.innerHTML = '<p class="loading">No data found.</p>';
@@ -230,47 +225,6 @@ document.addEventListener("DOMContentLoaded", () => {
             container.appendChild(table);
         } else {
             container.innerHTML = '<p class="loading">No dose data found.</p>';
-        }
-
-        const painTracking = calcPainTracking(logData);
-        if (painTracking && painTracking.length > 0) {
-            const container = document.getElementById('metrics-container');
-            let painHtml = '<h3>Pain Level Tracking</h3><div class="pain-track">';
-            painTracking.forEach(item => {
-                const painClass = getPainLevelClass(item.pain);
-                const painLabel = getPainLabel(item.pain);
-                const pct = item.pain !== null ? (item.pain / 5) * 100 : 0;
-                painHtml += `<div class="pain-track-item">
-                    <div class="pain-date">${formatDate(item.date)}</div>
-                    <div class="pain-bar-track">
-                        <div class="pain-bar-fill ${painClass}" style="width: ${pct}%"></div>
-                    </div>
-                    <div class="pain-level-text">${painLabel}</div>
-                    ${item.note ? `<div class="pain-note">${item.note}</div>` : ''}
-                </div>`;
-            });
-            painHtml += '</div>';
-            container.innerHTML = painHtml;
-        }
-
-        const weeklyStats = calcWeeklyStats(logData);
-        if (weeklyStats && weeklyStats.length > 0) {
-            const container = document.getElementById('metrics-container');
-            let weeklyHtml = '<h3>Weekly Injection Summary</h3>';
-            weeklyStats.forEach(ws => {
-                weeklyHtml += `<div class="chart-bar-container">
-                    <div class="chart-bar-label">${ws.week}</div>
-                    <div class="chart-bar-track">
-                        <div class="chart-bar-fill dose" style="width: ${(ws.count / Math.max(weeklyStats.length, 1) * 100).toFixed(0)}%"></div>
-                    </div>
-                </div>`;
-            });
-            weeklyHtml += '<table><thead><tr><th>Week</th><th>Injections</th><th>Total Dose</th></tr></thead><tbody>';
-            weeklyStats.forEach(ws => {
-                weeklyHtml += `<tr><td>${ws.week}</td><td>${ws.count}</td><td>${ws.totalDose} mg</td></tr>`;
-            });
-            weeklyHtml += '</tbody></table>';
-            container.innerHTML = weeklyHtml;
         }
     });
 
