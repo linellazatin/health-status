@@ -214,6 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         if (doseProgression && doseProgression.length > 0) {
             const latestFirst = doseProgression.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+            console.log("RENDERING DOSE TABLE:", latestFirst.length, "rows");
             let html = '<table><thead><tr>';
             ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
                 html += `<th>${col}</th>`;
@@ -228,6 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 html += '</tr>';
             });
             html += '</tbody></table>';
+            console.log("HTML TABLE:", html.substring(0, 200) + "...");
             container.innerHTML = html;
         } else {
             container.innerHTML = '<p class="loading">No dose data found.</p>';
