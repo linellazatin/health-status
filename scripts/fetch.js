@@ -99,8 +99,8 @@ function formatDate(dateStr) {
 
 function getTrendDirection(values) {
     if (values.length < 2) return 'flat';
-    const first = values[0];
-    const last = values[values.length - 1];
+    const first = values[values.length - 1];
+    const last = values[0];
     const diff = last - first;
     if (Math.abs(diff) < 0.01) return 'flat';
     return diff < 0 ? 'down' : 'up';
