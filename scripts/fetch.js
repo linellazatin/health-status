@@ -115,17 +115,6 @@ function calcWeightTrend(data) {
     return { values, sortedValues: weightRecords.map(r => r.Date), trend, first: values[values.length - 1], last: values[0] };
 }
 
-function calcDoseProgression(data) {
-    if (!data || data.length === 0) return null;
-    const sorted = data.slice().sort((a, b) => new Date(a["Injection Date"]) - new Date(b["Injection Date"]));
-    const items = sorted.map(row => ({
-        date: row["Injection Date"],
-        dose: parseFloat(row["Dose"]) || 0,
-        unit: row["Unit"] || ''
-    }));
-    return items;
-}
-
 function calcWeeklyStats(data) {
     if (!data || data.length === 0) return null;
     const sorted = data.slice().sort((a, b) => new Date(a["Injection Date"]) - new Date(b["Injection Date"]));
@@ -143,6 +132,7 @@ function calcWeeklyStats(data) {
         totalDose: val.totalDose.toFixed(1)
     }));
 }
+
 
 function calcHealthSummary(metricsData) {
     if (!metricsData || metricsData.length === 0) return null;
@@ -208,12 +198,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         
-        const doseProgression = calcDoseProgression(logData);
-        console.log("DOSE ITEMS:", doseProgression ? doseProgression.length : 0, "items");
-        console.log("SAMPLE DOSE:", JSON.stringify(doseProgression.slice(0, 2)));
-        
-        if (doseProgression && doseProgression.length > 0) {
-            const latestFirst = doseProgression.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (logData && logData.length > 0) {
+            const latestFirst = logData.slice().sort((a, b) => new Date(b["Injection Date"]) - new Date(a["Injection Date"]));
             console.log("RENDERING DOSE TABLE:", latestFirst.length, "rows");
             
             const table = document.createElement('table');
