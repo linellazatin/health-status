@@ -20,7 +20,9 @@ async function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoad
         console.log(`LOADED ${filename}:`, results.data.length, 'rows');
         console.log('HEADERS:', Object.keys(results.data[0] || {}));
         
-        renderTable(results.data, containerId, columnsToShow);
+        if (columnsToShow) {
+            renderTable(results.data, containerId, columnsToShow);
+        }
 
         if (onDataLoaded) {
             onDataLoaded(results.data);
@@ -38,15 +40,19 @@ function renderTable(data, containerId, columnsToShow) {
         container.innerHTML = '<p class="loading">No data found in file.</p>';
         return;
     }
+    
+    // Use provided columns or show all available columns
+    const cols = columnsToShow || Object.keys(data[0]);
+    
     let tableHtml = '<table><thead><tr>';
 
-    columnsToShow.forEach(col => {
+    cols.forEach(col => {
         tableHtml += `<th>${col}</th>`;
     });
     tableHtml += '</tr></thead><tbody>';
     data.forEach(row => {
         tableHtml += '<tr>';
-        columnsToShow.forEach(col => {
+        cols.forEach(col => {
             const cellValue = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
             tableHtml += `<td>${cellValue}</td>`;
         });
