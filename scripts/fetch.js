@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const painTracking = calcPainTracking(logData);
         if (painTracking && painTracking.length > 0) {
             const container = document.getElementById('metrics-container');
-            const painHtml = '<h3>Pain Level Tracking</h3><div class="pain-track">';
+            let painHtml = '<h3>Pain Level Tracking</h3><div class="pain-track">';
             painTracking.forEach(item => {
                 const painClass = getPainLevelClass(item.pain);
                 const painLabel = getPainLabel(item.pain);
@@ -245,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const weeklyStats = calcWeeklyStats(logData);
         if (weeklyStats && weeklyStats.length > 0) {
             const container = document.getElementById('metrics-container');
-            const weeklyHtml = '<h3>Weekly Injection Summary</h3>';
+            let weeklyHtml = '<h3>Weekly Injection Summary</h3>';
             weeklyStats.forEach(ws => {
                 weeklyHtml += `<div class="chart-bar-container">
                     <div class="chart-bar-label">${ws.week}</div>
