@@ -1,11 +1,16 @@
 :root {
-    --bg-color: #0f1115; 
+    --bg-color: #0f1115;
     --surface-color: #1c2128;
     --border-color: #30363d;
     --text-main: #c9d1d9;
     --text-muted: #8b949e;
     --cf-orange: #f38020;
     --hover-bg: #22272e;
+    --trend-up: #f85149;
+    --trend-down: #3fb950;
+    --trend-flat: #8b949e;
+    --accent-blue: #58a6ff;
+    --accent-purple: #bc8cff;
 }
 body {
     background-color: var(--bg-color);
@@ -26,6 +31,21 @@ h1 {
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 1rem;
 }
+h2 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--text-main);
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0 0 0.75rem 0;
+}
+
+/* Hero */
 .hero-stat-container {
     text-align: center;
     margin-bottom: 2rem;
@@ -54,12 +74,52 @@ h1 {
     color: var(--cf-orange);
     margin-left: 5px;
 }
-h2 {
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: var(--text-main);
-    margin-top: 0;
+/* Trend indicator */
+.trend-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 8px;
 }
+.trend-indicator.down { color: var(--trend-down); }
+.trend-indicator.up { color: var(--trend-up); }
+.trend-indicator.flat { color: var(--trend-flat); }
+
+/* Summary cards */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.summary-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+.summary-card .summary-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.summary-card .summary-value {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: var(--text-main);
+}
+.summary-card .summary-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Cards */
 .card {
     background-color: var(--surface-color);
     border: 1px solid var(--border-color);
@@ -92,6 +152,154 @@ th {
 tr:hover {
     background-color: var(--hover-bg);
 }
+
+/* Mini chart bar */
+.chart-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    height: 36px;
+}
+.chart-bar-label {
+    width: 72px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: right;
+    flex-shrink: 0;
+}
+.chart-bar-track {
+    flex: 1;
+    height: 100%;
+    background-color: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+.chart-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+.chart-bar-fill.weight { background-color: var(--cf-orange); }
+.chart-bar-fill.dose { background-color: var(--accent-blue); }
+
+/* Dose timeline */
+.dose-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.dose-timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background-color: rgba(88, 166, 255, 0.06);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+.dose-timeline-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--accent-blue);
+    flex-shrink: 0;
+}
+.dose-timeline-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    min-width: 100px;
+}
+.dose-timeline-dose {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+.dose-timeline-dose .unit {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 400;
+}
+
+/* Weight trend chart */
+.weight-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+.weight-chart-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.weight-chart-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    min-width: 130px;
+}
+.weight-chart-bar-track {
+    flex: 1;
+    height: 24px;
+    background-color: rgba(88, 166, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+.weight-chart-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-blue-light));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+.weight-chart-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    min-width: 50px;
+    text-align: right;
+}
+
+/* Weight trend line chart */
+.weight-chart-container {
+    width: 100%;
+    overflow-x: auto;
+}
+.weight-chart-container svg {
+    display: block;
+    margin: 0 auto;
+}
+
+/* Pain tracker */
+.pain-track-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.pain-track-item:last-child { border-bottom: none; }
+.pain-date { font-size: 0.8rem; color: var(--text-muted); min-width: 110px; }
+.pain-bar-track {
+    flex: 1;
+    height: 8px;
+    background-color: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.pain-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+.pain-bar-fill.low { background-color: var(--trend-up); }
+.pain-bar-fill.medium { background-color: var(--cf-orange); }
+.pain-bar-fill.high { background-color: var(--trend-down); }
+.pain-level-text { font-size: 0.8rem; color: var(--text-muted); min-width: 40px; text-align: right; }
+.pain-note { font-size: 0.8rem; color: var(--text-muted); max-width: 180px; }
+
+/* Loading & error */
 .loading {
     color: var(--text-muted);
     font-style: italic;
