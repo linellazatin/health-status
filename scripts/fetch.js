@@ -148,14 +148,19 @@ function calcHealthSummary(metricsData) {
     const allMetrics = metricsData.map(row => row["Metric Type"]).filter(Boolean);
     const uniqueTypes = [...new Set(allMetrics)];
 
+    const prevRecord = weightRecords.length >= 2 ? weightRecords[weightRecords.length - 2] : null;
+
     return {
         totalWeightReadings: weightRecords.length,
         firstWeight: firstWeight.toFixed(1),
+        firstDate: formatDate(weightRecords[0].Date),
         lastWeight: lastWeight.toFixed(1),
+        lastDate: formatDate(weightRecords[weightRecords.length - 1].Date),
         change: change.toFixed(1),
         pctChange: pctChange,
         metricTypes: uniqueTypes,
-        dateRange: `${formatDate(weightRecords[0].Date)} - ${formatDate(weightRecords[weightRecords.length - 1].Date)}`
+        prevWeight: prevRecord ? parseFloat(prevRecord["Value 1"]).toFixed(1) : null,
+        prevDate: prevRecord ? formatDate(prevRecord.Date) : null,
     };
 }
 
@@ -328,19 +333,26 @@ document.addEventListener("DOMContentLoaded", () => {
             grid.innerHTML += `<div class="summary-card">
                 <div class="summary-label">First Reading</div>
                 <div class="summary-value">${healthSummary.firstWeight} <span>kg</span></div>
-                <div class="summary-sub">${healthSummary.dateRange}</div>
+                <div class="summary-sub">${healthSummary.firstDate}</div>
             </div>`;
 
+            const recentDiff = healthSummary.prevWeight !== null
+                ? (parseFloat(healthSummary.lastWeight) - parseFloat(healthSummary.prevWeight)).toFixed(1)
+                : null;
+            const recentDiffColor = recentDiff !== null && parseFloat(recentDiff) <= 0
+                ? 'var(--trend-down)'
+                : 'var(--trend-up)';
+
             grid.innerHTML += `<div class="summary-card">
-                <div class="summary-label">Latest</div>
-                <div class="summary-value">${healthSummary.lastWeight} <span>kg</span></div>
-                <div class="summary-sub">${healthSummary.dateRange}</div>
+                <div class="summary-label">Since Last Weigh-in</div>
+                <div class="summary-value" style="color: ${recentDiffColor}">${recentDiff !== null ? recentDiff : 'N/A'} <span>kg</span></div>
+                <div class="summary-sub">${healthSummary.prevDate} → ${healthSummary.lastDate}</div>
             </div>`;
 
             grid.innerHTML += `<div class="summary-card">
                 <div class="summary-label">Change</div>
-                <div class="summary-value" style="color: ${healthSummary.change <= 0 ? 'var(--trend-up)' : 'var(--trend-down)'}">${healthSummary.change} <span>kg</span></div>
-                <div class="summary-sub">${healthSummary.pctChange}% over ${healthSummary.totalWeightReadings} readings</div>
+                <div class="summary-value" style="color: ${healthSummary.change <= 0 ? 'var(--trend-down)' : 'var(--trend-up)'}">${healthSummary.change} <span>kg</span></div>
+                <div class="summary-sub">${healthSummary.pctChange}% · ${healthSummary.firstDate} → ${healthSummary.lastDate}</div>
             </div>`;
 
             document.querySelector('.hero-stat-container').parentElement.insertBefore(grid, document.querySelector('.card'));
