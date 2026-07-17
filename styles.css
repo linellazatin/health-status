@@ -311,6 +311,137 @@ tr:hover {
     border-radius: 6px;
     border: 1px solid rgba(255, 123, 114, 0.4);
 }
-footer {
-    text-align: center;
+
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border-color);
+}
+
+.pagination-btn {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: var(--hover-bg);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-info {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Mobile pagination - stack vertically */
+@media (max-width: 480px) {
+    .pagination {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .pagination-btn, .page-info {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Weight trend line chart - force horizontal scroll on mobile */
+.weight-chart-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.weight-chart-container svg {
+    display: block;
+    margin: 0 auto;
+    min-width: 600px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+    
+    .container {
+        padding: 0;
+    }
+    
+    h1 {
+        font-size: 1.25rem;
+    }
+    
+    .hero-stat-container {
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .hero-value {
+        font-size: 2.5rem;
+    }
+    
+    .hero-value span {
+        font-size: 1.25rem;
+    }
+    
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+    
+    h2 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    table th, table td {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+    
+    th {
+        font-size: 0.7rem;
+    }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .hero-value {
+        font-size: 2rem;
+    }
+    
+    .hero-value span {
+        font-size: 1rem;
+    }
+    
+    .dose-timeline-item,
+    .pain-track-item {
+        padding: 6px 8px;
+    }
 }

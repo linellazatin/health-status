@@ -33,7 +33,7 @@ async function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoad
     }
 }
 
-function renderTable(data, containerId, columnsToShow) {
+function renderTable(data, containerId, columnsToShow, pagination = null) {
     const container = document.getElementById(containerId);
 
     if (!data || data.length === 0) {
@@ -50,7 +50,10 @@ function renderTable(data, containerId, columnsToShow) {
         tableHtml += `<th>${col}</th>`;
     });
     tableHtml += '</tr></thead><tbody>';
-    data.forEach(row => {
+    
+    const rowsToShow = pagination ? data.slice(pagination.startIndex, pagination.endIndex) : data;
+    
+    rowsToShow.forEach(row => {
         tableHtml += '<tr>';
         cols.forEach(col => {
             const cellValue = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
@@ -58,8 +61,59 @@ function renderTable(data, containerId, columnsToShow) {
         });
         tableHtml += '</tr>';
     });
+    
     tableHtml += '</tbody></table>';
     container.innerHTML = tableHtml;
+    
+    if (pagination && pagination.totalPages > 1) {
+        renderPagination(container, pagination, (page) => {
+            const newPagination = createPagination(data.length, page, 5);
+            container.innerHTML = renderTable(data, containerId, columnsToShow, newPagination);
+        });
+    }
+}
+
+function createPagination(totalRows, currentPage, rowsPerPage) {
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = Math.min(startIndex + rowsPerPage, totalRows);
+    return {
+        currentPage,
+        totalPages,
+        startIndex,
+        endIndex,
+        hasPrev: currentPage > 1,
+        hasNext: currentPage < totalPages,
+        goToPage: (page) => createPagination(totalRows, page, rowsPerPage)
+    };
+}
+
+function renderPagination(container, pagination, onPageChange) {
+    if (pagination.totalPages <= 1) return;
+
+    const nav = document.createElement('div');
+    nav.className = 'pagination';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'pagination-btn';
+    prevBtn.textContent = '← Prev';
+    prevBtn.disabled = !pagination.hasPrev;
+    prevBtn.onclick = () => onPageChange(pagination.currentPage - 1);
+    nav.appendChild(prevBtn);
+
+    const pageInfo = document.createElement('span');
+    pageInfo.className = 'page-info';
+    pageInfo.textContent = `Page ${pagination.currentPage} of ${pagination.totalPages}`;
+    nav.appendChild(pageInfo);
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'pagination-btn';
+    nextBtn.textContent = 'Next →';
+    nextBtn.disabled = !pagination.hasNext;
+    nextBtn.onclick = () => onPageChange(pagination.currentPage + 1);
+    nav.appendChild(nextBtn);
+
+    container.appendChild(nav);
 }
 
 function formatDate(dateStr) {
@@ -200,7 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
         
         if (logData && logData.length > 0) {
             const latestFirst = logData.slice().sort((a, b) => new Date(b["Injection Date"]) - new Date(a["Injection Date"]));
-            console.log("RENDERING DOSE TABLE:", latestFirst.length, "rows");
             
             const table = document.createElement('table');
             const thead = document.createElement('thead');
@@ -215,7 +268,9 @@ document.addEventListener("DOMContentLoaded", () => {
             table.appendChild(thead);
             
             const tbody = document.createElement('tbody');
-            latestFirst.forEach(row => {
+            const pagination = createPagination(latestFirst.length, 1, 5);
+            
+            latestFirst.slice(pagination.startIndex, pagination.endIndex).forEach(row => {
                 const tr = document.createElement('tr');
                 ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
                     const td = document.createElement('td');
@@ -228,6 +283,46 @@ document.addEventListener("DOMContentLoaded", () => {
             
             container.innerHTML = '';
             container.appendChild(table);
+            renderPagination(container, pagination, (page) => {
+                const newPagination = createPagination(latestFirst.length, page, 5);
+                tbody.innerHTML = '';
+                latestFirst.slice(newPagination.startIndex, newPagination.endIndex).forEach(row => {
+                    const tr = document.createElement('tr');
+                    ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
+                        const td = document.createElement('td');
+                        td.textContent = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                renderPagination(container, newPagination, (p) => {
+                    const freshPagination = createPagination(latestFirst.length, p, 5);
+                    tbody.innerHTML = '';
+                    latestFirst.slice(freshPagination.startIndex, freshPagination.endIndex).forEach(row => {
+                        const tr = document.createElement('tr');
+                        ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
+                            const td = document.createElement('td');
+                            td.textContent = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    renderPagination(container, freshPagination, (pp) => {
+                        const finalPagination = createPagination(latestFirst.length, pp, 5);
+                        tbody.innerHTML = '';
+                        latestFirst.slice(finalPagination.startIndex, finalPagination.endIndex).forEach(row => {
+                            const tr = document.createElement('tr');
+                            ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
+                                const td = document.createElement('td');
+                                td.textContent = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
+                                tr.appendChild(td);
+                            });
+                            tbody.appendChild(tr);
+                        });
+                        renderPagination(container, finalPagination, () => {});
+                    });
+                });
+            });
         } else {
             container.innerHTML = '<p class="loading">No dose data found.</p>';
         }
@@ -302,6 +397,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const metricColumns = ["Date", "Metric Type", "Value 1", "Unit"];
     loadAndRenderCSV(FILES.metrics, "metrics-container", metricColumns, function(data) {
+        const pagination = createPagination(data.length, 1, 5);
+        renderTable(data, "metrics-container", metricColumns, pagination);
         const weightTrend = calcWeightTrend(data);
         const healthSummary = calcHealthSummary(data);
 
