@@ -66,10 +66,41 @@ function renderTable(data, containerId, columnsToShow, pagination = null) {
     container.innerHTML = tableHtml;
     
     if (pagination && pagination.totalPages > 1) {
-        renderPagination(container, pagination, (page) => {
+        const paginationDiv = document.createElement('div');
+        paginationDiv.className = 'pagination';
+        
+        const updateTable = (page) => {
             const newPagination = createPagination(data.length, page, 5);
             container.innerHTML = renderTable(data, containerId, columnsToShow, newPagination);
-        });
+            renderPagination(container, newPagination, updateTable);
+        };
+        
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'pagination-btn';
+        prevBtn.textContent = '← Prev';
+        prevBtn.disabled = !pagination.hasPrev;
+        prevBtn.onclick = (e) => {
+            e.stopPropagation();
+            updateTable(pagination.currentPage - 1);
+        };
+        
+        const pageInfo = document.createElement('span');
+        pageInfo.className = 'page-info';
+        pageInfo.textContent = `Page ${pagination.currentPage} of ${pagination.totalPages}`;
+        
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'pagination-btn';
+        nextBtn.textContent = 'Next →';
+        nextBtn.disabled = !pagination.hasNext;
+        nextBtn.onclick = (e) => {
+            e.stopPropagation();
+            updateTable(pagination.currentPage + 1);
+        };
+        
+        paginationDiv.appendChild(prevBtn);
+        paginationDiv.appendChild(pageInfo);
+        paginationDiv.appendChild(nextBtn);
+        container.appendChild(paginationDiv);
     }
 }
 
@@ -98,7 +129,10 @@ function renderPagination(container, pagination, onPageChange) {
     prevBtn.className = 'pagination-btn';
     prevBtn.textContent = '← Prev';
     prevBtn.disabled = !pagination.hasPrev;
-    prevBtn.onclick = () => onPageChange(pagination.currentPage - 1);
+    prevBtn.onclick = (e) => {
+        e.stopPropagation();
+        onPageChange(pagination.currentPage - 1);
+    };
     nav.appendChild(prevBtn);
 
     const pageInfo = document.createElement('span');
@@ -110,7 +144,10 @@ function renderPagination(container, pagination, onPageChange) {
     nextBtn.className = 'pagination-btn';
     nextBtn.textContent = 'Next →';
     nextBtn.disabled = !pagination.hasNext;
-    nextBtn.onclick = () => onPageChange(pagination.currentPage + 1);
+    nextBtn.onclick = (e) => {
+        e.stopPropagation();
+        onPageChange(pagination.currentPage + 1);
+    };
     nav.appendChild(nextBtn);
 
     container.appendChild(nav);
@@ -283,7 +320,8 @@ document.addEventListener("DOMContentLoaded", () => {
             
             container.innerHTML = '';
             container.appendChild(table);
-            renderPagination(container, pagination, (page) => {
+            
+            const updateTable = (page) => {
                 const newPagination = createPagination(latestFirst.length, page, 5);
                 tbody.innerHTML = '';
                 latestFirst.slice(newPagination.startIndex, newPagination.endIndex).forEach(row => {
@@ -295,34 +333,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                     tbody.appendChild(tr);
                 });
-                renderPagination(container, newPagination, (p) => {
-                    const freshPagination = createPagination(latestFirst.length, p, 5);
-                    tbody.innerHTML = '';
-                    latestFirst.slice(freshPagination.startIndex, freshPagination.endIndex).forEach(row => {
-                        const tr = document.createElement('tr');
-                        ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
-                            const td = document.createElement('td');
-                            td.textContent = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
-                            tr.appendChild(td);
-                        });
-                        tbody.appendChild(tr);
-                    });
-                    renderPagination(container, freshPagination, (pp) => {
-                        const finalPagination = createPagination(latestFirst.length, pp, 5);
-                        tbody.innerHTML = '';
-                        latestFirst.slice(finalPagination.startIndex, finalPagination.endIndex).forEach(row => {
-                            const tr = document.createElement('tr');
-                            ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
-                                const td = document.createElement('td');
-                                td.textContent = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
-                                tr.appendChild(td);
-                            });
-                            tbody.appendChild(tr);
-                        });
-                        renderPagination(container, finalPagination, () => {});
-                    });
-                });
-            });
+                renderPagination(container, newPagination, updateTable);
+            };
+            
+            updateTable(1);
         } else {
             container.innerHTML = '<p class="loading">No dose data found.</p>';
         }
@@ -398,7 +412,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const metricColumns = ["Date", "Metric Type", "Value 1", "Unit"];
     loadAndRenderCSV(FILES.metrics, "metrics-container", metricColumns, function(data) {
         const pagination = createPagination(data.length, 1, 5);
-        renderTable(data, "metrics-container", metricColumns, pagination);
+        
+        const updateMetricsTable = (page) => {
+            const newPagination = createPagination(data.length, page, 5);
+            renderTable(data, "metrics-container", metricColumns, newPagination);
+            renderPagination(document.getElementById("metrics-container"), newPagination, updateMetricsTable);
+        };
+        
+        updateMetricsTable(1);
         const weightTrend = calcWeightTrend(data);
         const healthSummary = calcHealthSummary(data);
 
