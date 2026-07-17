@@ -33,7 +33,7 @@ async function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoad
     }
 }
 
-function renderTable(data, containerId, columnsToShow, pagination = null) {
+function renderTable(data, containerId, columnsToShow, startIndex, endIndex) {
     const container = document.getElementById(containerId);
 
     if (!data || data.length === 0) {
@@ -43,16 +43,11 @@ function renderTable(data, containerId, columnsToShow, pagination = null) {
     
     // Use provided columns or show all available columns
     const cols = columnsToShow || Object.keys(data[0]);
+    const rowsToShow = (startIndex !== undefined) ? data.slice(startIndex, endIndex) : data;
     
     let tableHtml = '<table><thead><tr>';
-
-    cols.forEach(col => {
-        tableHtml += `<th>${col}</th>`;
-    });
+    cols.forEach(col => { tableHtml += `<th>${col}</th>`; });
     tableHtml += '</tr></thead><tbody>';
-    
-    const rowsToShow = pagination ? data.slice(pagination.startIndex, pagination.endIndex) : data;
-    
     rowsToShow.forEach(row => {
         tableHtml += '<tr>';
         cols.forEach(col => {
@@ -61,96 +56,49 @@ function renderTable(data, containerId, columnsToShow, pagination = null) {
         });
         tableHtml += '</tr>';
     });
-    
     tableHtml += '</tbody></table>';
     container.innerHTML = tableHtml;
-    
-    if (pagination && pagination.totalPages > 1) {
-        const paginationDiv = document.createElement('div');
-        paginationDiv.className = 'pagination';
-        
-        const updateTable = (page) => {
-            const newPagination = createPagination(data.length, page, 5);
-            container.innerHTML = renderTable(data, containerId, columnsToShow, newPagination);
-            renderPagination(container, newPagination, updateTable);
-        };
-        
+}
+
+function renderPaginatedTable(data, containerId, columnsToShow, initialPage) {
+    const ROWS_PER_PAGE = 5;
+    const totalPages = Math.ceil(data.length / ROWS_PER_PAGE);
+
+    function goToPage(page) {
+        const startIndex = (page - 1) * ROWS_PER_PAGE;
+        const endIndex = Math.min(startIndex + ROWS_PER_PAGE, data.length);
+
+        renderTable(data, containerId, columnsToShow, startIndex, endIndex);
+
+        if (totalPages <= 1) return;
+
+        const container = document.getElementById(containerId);
+        const nav = document.createElement('div');
+        nav.className = 'pagination';
+
         const prevBtn = document.createElement('button');
         prevBtn.className = 'pagination-btn';
         prevBtn.textContent = '← Prev';
-        prevBtn.disabled = !pagination.hasPrev;
-        prevBtn.onclick = (e) => {
-            e.stopPropagation();
-            updateTable(pagination.currentPage - 1);
-        };
-        
+        prevBtn.disabled = page <= 1;
+        prevBtn.onclick = () => goToPage(page - 1);
+
         const pageInfo = document.createElement('span');
         pageInfo.className = 'page-info';
-        pageInfo.textContent = `Page ${pagination.currentPage} of ${pagination.totalPages}`;
-        
+        pageInfo.textContent = `Page ${page} of ${totalPages}`;
+
         const nextBtn = document.createElement('button');
         nextBtn.className = 'pagination-btn';
         nextBtn.textContent = 'Next →';
-        nextBtn.disabled = !pagination.hasNext;
-        nextBtn.onclick = (e) => {
-            e.stopPropagation();
-            updateTable(pagination.currentPage + 1);
-        };
-        
-        paginationDiv.appendChild(prevBtn);
-        paginationDiv.appendChild(pageInfo);
-        paginationDiv.appendChild(nextBtn);
-        container.appendChild(paginationDiv);
+        nextBtn.disabled = page >= totalPages;
+        nextBtn.onclick = () => goToPage(page + 1);
+
+        nav.appendChild(prevBtn);
+        nav.appendChild(pageInfo);
+        nav.appendChild(nextBtn);
+        container.appendChild(nav);
     }
-}
 
-function createPagination(totalRows, currentPage, rowsPerPage) {
-    const totalPages = Math.ceil(totalRows / rowsPerPage);
-    const startIndex = (currentPage - 1) * rowsPerPage;
-    const endIndex = Math.min(startIndex + rowsPerPage, totalRows);
-    return {
-        currentPage,
-        totalPages,
-        startIndex,
-        endIndex,
-        hasPrev: currentPage > 1,
-        hasNext: currentPage < totalPages,
-        goToPage: (page) => createPagination(totalRows, page, rowsPerPage)
-    };
-}
-
-function renderPagination(container, pagination, onPageChange) {
-    if (pagination.totalPages <= 1) return;
-
-    const nav = document.createElement('div');
-    nav.className = 'pagination';
-
-    const prevBtn = document.createElement('button');
-    prevBtn.className = 'pagination-btn';
-    prevBtn.textContent = '← Prev';
-    prevBtn.disabled = !pagination.hasPrev;
-    prevBtn.onclick = (e) => {
-        e.stopPropagation();
-        onPageChange(pagination.currentPage - 1);
-    };
-    nav.appendChild(prevBtn);
-
-    const pageInfo = document.createElement('span');
-    pageInfo.className = 'page-info';
-    pageInfo.textContent = `Page ${pagination.currentPage} of ${pagination.totalPages}`;
-    nav.appendChild(pageInfo);
-
-    const nextBtn = document.createElement('button');
-    nextBtn.className = 'pagination-btn';
-    nextBtn.textContent = 'Next →';
-    nextBtn.disabled = !pagination.hasNext;
-    nextBtn.onclick = (e) => {
-        e.stopPropagation();
-        onPageChange(pagination.currentPage + 1);
-    };
-    nav.appendChild(nextBtn);
-
-    container.appendChild(nav);
+    goToPage(initialPage);
 }
 
 function formatDate(dateStr) {
@@ -280,66 +228,13 @@ function calcHealthSummary(metricsData) {
 
 document.addEventListener("DOMContentLoaded", () => {
     const logColumns = ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"];
-    loadAndRenderCSV(FILES.logs, "logs-container", logColumns, function(logData) {
-        const container = document.getElementById('logs-container');
-        if (!container) return;
-        
-        if (logData.length === 0) {
-            container.innerHTML = '<p class="loading">No data found.</p>';
+    loadAndRenderCSV(FILES.logs, "logs-container", null, function(logData) {
+        if (!logData || logData.length === 0) {
+            document.getElementById('logs-container').innerHTML = '<p class="loading">No data found.</p>';
             return;
         }
-        
-        if (logData && logData.length > 0) {
-            const latestFirst = logData.slice().sort((a, b) => new Date(b["Injection Date"]) - new Date(a["Injection Date"]));
-            
-            const table = document.createElement('table');
-            const thead = document.createElement('thead');
-            const trHead = document.createElement('tr');
-            
-            ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
-                const th = document.createElement('th');
-                th.textContent = col;
-                trHead.appendChild(th);
-            });
-            thead.appendChild(trHead);
-            table.appendChild(thead);
-            
-            const tbody = document.createElement('tbody');
-            const pagination = createPagination(latestFirst.length, 1, 5);
-            
-            latestFirst.slice(pagination.startIndex, pagination.endIndex).forEach(row => {
-                const tr = document.createElement('tr');
-                ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
-                    const td = document.createElement('td');
-                    td.textContent = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
-                    tr.appendChild(td);
-                });
-                tbody.appendChild(tr);
-            });
-            table.appendChild(tbody);
-            
-            container.innerHTML = '';
-            container.appendChild(table);
-            
-            const updateTable = (page) => {
-                const newPagination = createPagination(latestFirst.length, page, 5);
-                tbody.innerHTML = '';
-                latestFirst.slice(newPagination.startIndex, newPagination.endIndex).forEach(row => {
-                    const tr = document.createElement('tr');
-                    ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"].forEach(col => {
-                        const td = document.createElement('td');
-                        td.textContent = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
-                        tr.appendChild(td);
-                    });
-                    tbody.appendChild(tr);
-                });
-                renderPagination(container, newPagination, updateTable);
-            };
-            
-            updateTable(1);
-        } else {
-            container.innerHTML = '<p class="loading">No dose data found.</p>';
-        }
+        const latestFirst = logData.slice().sort((a, b) => new Date(b["Injection Date"]) - new Date(a["Injection Date"]));
+        renderPaginatedTable(latestFirst, "logs-container", logColumns, 1);
     });
 
     // Weight trend line chart
@@ -410,16 +305,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const metricColumns = ["Date", "Metric Type", "Value 1", "Unit"];
-    loadAndRenderCSV(FILES.metrics, "metrics-container", metricColumns, function(data) {
-        const pagination = createPagination(data.length, 1, 5);
-        
-        const updateMetricsTable = (page) => {
-            const newPagination = createPagination(data.length, page, 5);
-            renderTable(data, "metrics-container", metricColumns, newPagination);
-            renderPagination(document.getElementById("metrics-container"), newPagination, updateMetricsTable);
-        };
-        
-        updateMetricsTable(1);
+    loadAndRenderCSV(FILES.metrics, "metrics-container", null, function(data) {
+        renderPaginatedTable(data, "metrics-container", metricColumns, 1);
         const weightTrend = calcWeightTrend(data);
         const healthSummary = calcHealthSummary(data);
 
