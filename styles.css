@@ -361,17 +361,51 @@ tr:hover {
     }
 }
 
-/* Weight trend line chart - force horizontal scroll on mobile */
+/* Weight trend line chart */
 .weight-chart-container {
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    position: relative;
 }
 
 .weight-chart-container svg {
     display: block;
     margin: 0 auto;
-    min-width: 600px;
+}
+
+/* Custom tooltip for data points */
+.weight-chart-container circle:hover {
+    stroke: #fff;
+    stroke-width: 3;
+    cursor: pointer;
+}
+
+.weight-chart-container .tooltip {
+    position: absolute;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.weight-chart-container .tooltip.visible {
+    opacity: 1;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
 }
 
 /* Mobile responsiveness */

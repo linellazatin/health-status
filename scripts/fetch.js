@@ -277,14 +277,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     </g>`;
                 }).join('')}
                 
-                <!-- X-axis labels -->
-                ${dates.map((date, i) => {
-                    const x = (i / (dates.length - 1 || 1)) * chartWidth;
-                    return `<g transform="translate(${x}, ${chartHeight})">
-                        <text y="14" text-anchor="middle" font-size="11" fill="var(--text-muted)">${formatDate(date)}</text>
-                    </g>`;
-                }).join('')}
-                
                 <!-- Line path -->
                 <polyline points="${dates.map((date, i) => {
                     const x = (i / (dates.length - 1 || 1)) * chartWidth;
@@ -296,12 +288,54 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${dates.map((date, i) => {
                     const x = (i / (dates.length - 1 || 1)) * chartWidth;
                     const y = chartHeight - ((values[i] - chartMin) / range) * chartHeight;
-                    return `<circle cx="${x}" cy="${y}" r="5" fill="var(--accent-blue)" stroke="white" stroke-width="2"/>`;
+                    return `<circle cx="${x}" cy="${y}" r="5" fill="var(--accent-blue)" stroke="white" stroke-width="2" data-value="${values[i]}"/>`;
                 }).join('')}
             </g>
         </svg>`;
         
-        container.innerHTML = `<div class="weight-chart-container">${svgHtml}</div>`;
+        // Clear existing content
+        container.innerHTML = '';
+        
+        const chartContainer = document.createElement('div');
+        chartContainer.className = 'weight-chart-container';
+        
+        // Add tooltip element to body for proper positioning
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        document.body.appendChild(tooltip);
+        chartContainer.innerHTML = svgHtml;
+        
+        // Add hover events to data points
+        chartContainer.querySelectorAll('circle').forEach((circle, i) => {
+            const value = values[i];
+            
+            circle.addEventListener('mouseenter', (e) => {
+                tooltip.style.left = (e.pageX + 10) + 'px';
+                tooltip.style.top = (e.pageY - 10) + 'px';
+                tooltip.textContent = `${value} kg`;
+                tooltip.classList.add('visible');
+            });
+            
+            circle.addEventListener('mousemove', (e) => {
+                tooltip.style.left = (e.pageX + 10) + 'px';
+                tooltip.style.top = (e.pageY - 10) + 'px';
+            });
+            
+            circle.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('visible');
+            });
+        });
+        
+        // Cleanup tooltip on chart destroy
+        const cleanup = () => {
+            tooltip.classList.remove('visible');
+            tooltip.remove();
+        };
+        
+        container.appendChild(chartContainer);
+        
+        // Store cleanup function for later use
+        chartContainer.dataset.cleanup = cleanup.toString();
     });
 
     const metricColumns = ["Date", "Metric Type", "Value 1", "Unit"];
