@@ -150,7 +150,6 @@ function calcHealthSummary(metricsData) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    const logColumns = ["Injection Date", "Peptide", "Dose", "Injection Site"];
     loadAndRenderCSV(FILES.logs, "logs-container", null, function(logData) {
         if (!logData || logData.length === 0) {
             document.getElementById('logs-container').innerHTML = '<p class="loading">No data found.</p>';
@@ -158,8 +157,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const latestFirst = logData.slice()
             .sort((a, b) => new Date(b["Injection Date"]) - new Date(a["Injection Date"]))
-            .map(row => ({ ...row, Dose: `${row.Dose} ${row.Unit}`.trim() }));
-        renderPaginatedTable(latestFirst, "logs-container", logColumns, 1);
+            .map(row => ({ ...row, Date: row["Injection Date"], Dose: `${row.Dose} ${row.Unit}`.trim() }));
+        renderPaginatedTable(latestFirst, "logs-container", ["Date", "Peptide", "Dose", "Injection Site"], 1);
     });
 
     // Weight trend line chart
