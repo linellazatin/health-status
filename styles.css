@@ -348,16 +348,33 @@ tr:hover {
     color: var(--text-muted);
 }
 
-/* Mobile pagination - stack vertically */
-@media (max-width: 480px) {
+/* Compact pagination on mobile */
+@media (max-width: 768px) {
     .pagination {
-        flex-direction: column;
         gap: 8px;
+        padding: 8px 0;
     }
     
-    .pagination-btn, .page-info {
-        width: 100%;
-        text-align: center;
+    .pagination-btn {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+        min-width: auto;
+    }
+    
+    .page-info {
+        font-size: 0.75rem;
+    }
+}
+
+/* Very small mobile - reduce further */
+@media (max-width: 480px) {
+    .pagination {
+        gap: 6px;
+    }
+    
+    .pagination-btn {
+        padding: 4px 8px;
+        font-size: 0.7rem;
     }
 }
 
@@ -367,6 +384,21 @@ tr:hover {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
+}
+
+/* Hide chart on mobile portrait, show message */
+@media (max-width: 768px) and (orientation: portrait) {
+    .weight-chart-container svg {
+        display: none;
+    }
+    
+    .weight-chart-container .mobile-chart-message {
+        display: block;
+        text-align: center;
+        padding: 1rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
 }
 
 .weight-chart-container svg {
@@ -438,6 +470,13 @@ footer {
     .summary-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
+    }
+    
+    /* Keep 2 columns on mobile, only stack on very small screens */
+    @media (max-width: 480px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
     }
     
     .card {
