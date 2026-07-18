@@ -10,7 +10,6 @@
     --trend-down: #3fb950;
     --trend-flat: #8b949e;
     --accent-blue: #58a6ff;
-    --accent-purple: #bc8cff;
 }
 body {
     background-color: var(--bg-color);
@@ -37,12 +36,6 @@ h2 {
     color: var(--text-main);
     margin-top: 0;
     margin-bottom: 1rem;
-}
-h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-main);
-    margin: 0 0 0.75rem 0;
 }
 
 /* Hero */
@@ -141,6 +134,7 @@ th, td {
     text-align: left;
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
 }
 th {
     color: var(--text-muted);
@@ -152,152 +146,9 @@ th {
 tr:hover {
     background-color: var(--hover-bg);
 }
-
-/* Mini chart bar */
-.chart-bar-container {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
-    height: 36px;
+tr:active {
+    background-color: var(--hover-bg);
 }
-.chart-bar-label {
-    width: 72px;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-align: right;
-    flex-shrink: 0;
-}
-.chart-bar-track {
-    flex: 1;
-    height: 100%;
-    background-color: var(--border-color);
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
-}
-.chart-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    transition: width 0.3s ease;
-}
-.chart-bar-fill.weight { background-color: var(--cf-orange); }
-.chart-bar-fill.dose { background-color: var(--accent-blue); }
-
-/* Dose timeline */
-.dose-timeline {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-.dose-timeline-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 12px;
-    background-color: rgba(88, 166, 255, 0.06);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-}
-.dose-timeline-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: var(--accent-blue);
-    flex-shrink: 0;
-}
-.dose-timeline-date {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    min-width: 100px;
-}
-.dose-timeline-dose {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-main);
-}
-.dose-timeline-dose .unit {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    font-weight: 400;
-}
-
-/* Weight trend chart */
-.weight-chart {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-top: 1rem;
-}
-.weight-chart-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.weight-chart-date {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    min-width: 130px;
-}
-.weight-chart-bar-track {
-    flex: 1;
-    height: 24px;
-    background-color: rgba(88, 166, 255, 0.1);
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
-}
-.weight-chart-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent-blue), var(--accent-blue-light));
-    border-radius: 4px;
-    transition: width 0.5s ease;
-}
-.weight-chart-value {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-main);
-    min-width: 50px;
-    text-align: right;
-}
-
-/* Weight trend line chart */
-.weight-chart-container {
-    width: 100%;
-    overflow-x: auto;
-}
-.weight-chart-container svg {
-    display: block;
-    margin: 0 auto;
-}
-
-/* Pain tracker */
-.pain-track-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border-color);
-}
-.pain-track-item:last-child { border-bottom: none; }
-.pain-date { font-size: 0.8rem; color: var(--text-muted); min-width: 110px; }
-.pain-bar-track {
-    flex: 1;
-    height: 8px;
-    background-color: var(--border-color);
-    border-radius: 4px;
-    overflow: hidden;
-}
-.pain-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    transition: width 0.3s ease;
-}
-.pain-bar-fill.low { background-color: var(--trend-up); }
-.pain-bar-fill.medium { background-color: var(--cf-orange); }
-.pain-bar-fill.high { background-color: var(--trend-down); }
-.pain-level-text { font-size: 0.8rem; color: var(--text-muted); min-width: 40px; text-align: right; }
-.pain-note { font-size: 0.8rem; color: var(--text-muted); max-width: 180px; }
 
 /* Loading & error */
 .loading {
@@ -356,8 +207,8 @@ tr:hover {
     }
     
     .pagination-btn {
-        padding: 4px 10px;
-        font-size: 0.75rem;
+        padding: 10px 14px;
+        font-size: 0.85rem;
         min-width: auto;
     }
     
@@ -373,7 +224,7 @@ tr:hover {
     }
     
     .pagination-btn {
-        padding: 4px 8px;
+        padding: 10px 12px;
         font-size: 0.7rem;
     }
 }
@@ -413,8 +264,9 @@ tr:hover {
     cursor: pointer;
 }
 
-.weight-chart-container .tooltip {
-    position: absolute;
+.chart-tooltip {
+    position: fixed;
+    white-space: pre;
     background: var(--surface-color);
     border: 1px solid var(--border-color);
     color: var(--text-main);
@@ -428,7 +280,7 @@ tr:hover {
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-.weight-chart-container .tooltip.visible {
+.chart-tooltip.visible {
     opacity: 1;
 }
 
@@ -472,13 +324,6 @@ footer {
         gap: 0.75rem;
     }
     
-    /* Keep 2 columns on mobile, only stack on very small screens */
-    @media (max-width: 480px) {
-        .summary-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-    
     .card {
         margin-bottom: 1rem;
         padding: 1rem;
@@ -512,9 +357,13 @@ footer {
     .hero-value span {
         font-size: 1rem;
     }
-    
-    .dose-timeline-item,
-    .pain-track-item {
+
+    th, td {
         padding: 6px 8px;
+        font-size: 0.75rem;
+    }
+
+    th {
+        font-size: 0.65rem;
     }
 }

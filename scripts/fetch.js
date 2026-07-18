@@ -17,9 +17,6 @@ async function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoad
             header: true,
             skipEmptyLines: true
         });
-        console.log(`LOADED ${filename}:`, results.data.length, 'rows');
-        console.log('HEADERS:', Object.keys(results.data[0] || {}));
-        
         if (columnsToShow) {
             renderTable(results.data, containerId, columnsToShow);
         }
@@ -108,34 +105,6 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-// function formatWeightValue(val) {
-//     if (!val) return '-';
-//     const num = parseFloat(val);
-//     if (isNaN(num)) return val;
-//     return num.toFixed(1);
-// }
-
-// function formatDoseValue(val) {
-//     if (!val) return '-';
-//     const num = parseFloat(val);
-//     if (isNaN(num)) return val;
-//     return num.toFixed(1);
-// }
-
-// function formatRelativeDate(dateStr) {
-//     if (!dateStr) return '-';
-//     const d = new Date(dateStr);
-//     const now = new Date();
-//     const diffTime = now - d;
-//     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-//     if (diffDays === 0) return 'today';
-//     if (diffDays === 1) return 'yesterday';
-//     if (diffDays < 7) return `${diffDays} days ago`;
-//     if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-//     return `${Math.floor(diffDays / 30)}mo ago`;
-// }
-
 function getTrendDirection(values) {
     if (values.length < 2) return 'flat';
     const first = values[values.length - 1];
@@ -151,27 +120,8 @@ function calcWeightTrend(data) {
     weightRecords.sort((a, b) => new Date(b.Date) - new Date(a.Date));
     const values = weightRecords.map(r => parseFloat(r["Value 1"]) || 0);
     const trend = getTrendDirection(values);
-    return { values, sortedValues: weightRecords.map(r => r.Date), trend, first: values[values.length - 1], last: values[0] };
+    return { values, trend, first: values[values.length - 1], last: values[0] };
 }
-
-// function calcWeeklyStats(data) {
-//     if (!data || data.length === 0) return null;
-//     const sorted = data.slice().sort((a, b) => new Date(a["Injection Date"]) - new Date(b["Injection Date"]));
-//     const weeks = {};
-//     sorted.forEach(row => {
-//         const d = new Date(row["Injection Date"]);
-//         const weekKey = `${d.getFullYear()}-W${Math.ceil(d.getDate() / 7)}`;
-//         if (!weeks[weekKey]) weeks[weekKey] = { count: 0, totalDose: 0 };
-//         weeks[weekKey].count++;
-//         weeks[weekKey].totalDose += (parseFloat(row["Dose"]) || 0);
-//     });
-//     return Object.entries(weeks).map(([key, val]) => ({
-//         week: key,
-//         count: val.count,
-//         totalDose: val.totalDose.toFixed(1)
-//     }));
-// }
-
 
 function calcHealthSummary(metricsData) {
     if (!metricsData || metricsData.length === 0) return null;
@@ -184,9 +134,6 @@ function calcHealthSummary(metricsData) {
     const change = lastWeight - firstWeight;
     const pctChange = ((change / firstWeight) * 100).toFixed(1);
 
-    const allMetrics = metricsData.map(row => row["Metric Type"]).filter(Boolean);
-    const uniqueTypes = [...new Set(allMetrics)];
-
     const prevRecord = weightRecords.length >= 2 ? weightRecords[weightRecords.length - 2] : null;
 
     return {
@@ -197,43 +144,21 @@ function calcHealthSummary(metricsData) {
         lastDate: formatDate(weightRecords[weightRecords.length - 1].Date),
         change: change.toFixed(1),
         pctChange: pctChange,
-        metricTypes: uniqueTypes,
         prevWeight: prevRecord ? parseFloat(prevRecord["Value 1"]).toFixed(1) : null,
         prevDate: prevRecord ? formatDate(prevRecord.Date) : null,
     };
 }
 
-// function calcPainTracking(data) {
-//     if (!data || data.length === 0) return null;
-//     const sorted = data.slice().sort((a, b) => new Date(a["Injection Date"]) - new Date(b["Injection Date"]));
-//     return sorted.map(row => ({
-//         date: row["Injection Date"],
-//         pain: row["Pain Level"] ? parseInt(row["Pain Level"]) : null,
-//         note: row["Notes"] || ''
-//     }));
-// }
-
-// function getPainLevelClass(pain) {
-//     if (pain === null || pain === undefined) return 'low';
-//     if (pain <= 2) return 'low';
-//     if (pain <= 4) return 'medium';
-//     return 'high';
-// }
-
-// function getPainLabel(pain) {
-//     if (pain === null || pain === undefined) return '-';
-//     const labels = ['', 'Minimal', 'Low', 'Moderate', 'High', 'Severe'];
-//     return labels[pain] || '';
-// }
-
 document.addEventListener("DOMContentLoaded", () => {
-    const logColumns = ["Injection Date", "Peptide", "Dose", "Unit", "Injection Site"];
+    const logColumns = ["Injection Date", "Peptide", "Dose", "Injection Site"];
     loadAndRenderCSV(FILES.logs, "logs-container", null, function(logData) {
         if (!logData || logData.length === 0) {
             document.getElementById('logs-container').innerHTML = '<p class="loading">No data found.</p>';
             return;
         }
-        const latestFirst = logData.slice().sort((a, b) => new Date(b["Injection Date"]) - new Date(a["Injection Date"]));
+        const latestFirst = logData.slice()
+            .sort((a, b) => new Date(b["Injection Date"]) - new Date(a["Injection Date"]))
+            .map(row => ({ ...row, Dose: `${row.Dose} ${row.Unit}`.trim() }));
         renderPaginatedTable(latestFirst, "logs-container", logColumns, 1);
     });
 
@@ -299,10 +224,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const chartContainer = document.createElement('div');
         chartContainer.className = 'weight-chart-container';
         
-        // Add tooltip element to body for proper positioning
+        // Add tooltip element, appended to body on mouseenter for proper positioning
         const tooltip = document.createElement('div');
-        tooltip.className = 'tooltip';
-        document.body.appendChild(tooltip);
+        tooltip.className = 'chart-tooltip';
         chartContainer.innerHTML = svgHtml;
         
         // Add hover events to data points
@@ -310,37 +234,35 @@ document.addEventListener("DOMContentLoaded", () => {
             const value = values[i];
             
             circle.addEventListener('mouseenter', (e) => {
-                tooltip.style.left = (e.pageX + 10) + 'px';
-                tooltip.style.top = (e.pageY - 10) + 'px';
-                tooltip.textContent = `${value} kg`;
+                document.body.appendChild(tooltip);
+                tooltip.style.left = (e.clientX + 10) + 'px';
+                tooltip.style.top = (e.clientY - 10) + 'px';
+                tooltip.textContent = `${value} kg\n${formatDate(dates[i])}`;
                 tooltip.classList.add('visible');
             });
             
             circle.addEventListener('mousemove', (e) => {
-                tooltip.style.left = (e.pageX + 10) + 'px';
-                tooltip.style.top = (e.pageY - 10) + 'px';
+                tooltip.style.left = (e.clientX + 10) + 'px';
+                tooltip.style.top = (e.clientY - 10) + 'px';
             });
             
             circle.addEventListener('mouseleave', () => {
                 tooltip.classList.remove('visible');
+                tooltip.remove();
             });
         });
         
-        // Cleanup tooltip on chart destroy
-        const cleanup = () => {
-            tooltip.classList.remove('visible');
-            tooltip.remove();
-        };
-        
         container.appendChild(chartContainer);
-        
-        // Store cleanup function for later use
-        chartContainer.dataset.cleanup = cleanup.toString();
     });
 
-    const metricColumns = ["Date", "Metric Type", "Value 1", "Unit"];
+    const metricColumns = ["Date", "Metric Type", "Value"];
     loadAndRenderCSV(FILES.metrics, "metrics-container", null, function(data) {
-        renderPaginatedTable(data, "metrics-container", metricColumns, 1);
+        const displayData = data.map(row => ({
+            ...row,
+            Date: row.Date ? row.Date.split(' ')[0] : row.Date,
+            Value: `${row["Value 1"]} ${row.Unit}`.trim()
+        }));
+        renderPaginatedTable(displayData, "metrics-container", metricColumns, 1);
         const weightTrend = calcWeightTrend(data);
         const healthSummary = calcHealthSummary(data);
 
