@@ -441,7 +441,7 @@ footer {
 }
 
 /* Mobile responsiveness */
-@media (max-width: 500px) {
+@media (max-width: 768px) {
     body {
         padding: 1rem;
     }
@@ -476,14 +476,6 @@ footer {
     @media (max-width: 480px) {
         .summary-grid {
             grid-template-columns: 1fr;
-        }
-    }
-    
-    /* S25 Ultra viewport (~380px usable width) - force 2 columns */
-    @media (max-width: 380px) {
-        .summary-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.6rem;
         }
     }
     
