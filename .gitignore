@@ -7,3 +7,6 @@
 
 # opencode plans
 .opencode
+
+# playwright output
+.playwright-mcp
