@@ -24,7 +24,7 @@ No other commands needed. No build, no install.
 - `calcWeightTrend(data)` — sorts **descending** (newest first); `values[0]` = latest, `values[length-1]` = oldest
 - `calcHealthSummary(data)` — sorts **ascending** (oldest first); returns `firstDate`, `lastDate`, `prevWeight`, `prevDate` for summary cards
 - `getTrendDirection(values)` — expects descending-sorted array; `first = values[length-1]` (oldest), `last = values[0]` (newest)
-- Several functions are commented out (not deleted): `calcWeeklyStats`, `calcPainTracking`, `getPainLevelClass`, `getPainLabel`, `formatWeightValue`, `formatDoseValue`, `formatRelativeDate`
+- Several functions were deleted (no longer in `fetch.js`): `calcWeeklyStats`, `calcPainTracking`, `getPainLevelClass`, `getPainLabel`, `formatWeightValue`, `formatDoseValue`, `formatRelativeDate`
 
 ## Color conventions
 - Weight loss (down) = **green** (`--trend-down: #3fb950`) — goal is to lose weight

@@ -1,9 +1,4 @@
-const FILES = {
-    logs: 'mypeptideapp_peptide_logs.csv',
-    metrics: 'mypeptideapp_health_metrics.csv'
-};
-
-async function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoaded = null) {
+async function loadAndRenderCSV(filename, containerId, onDataLoaded = null) {
     try {
         const url = window.location.origin + '/' + filename;
         const response = await fetch(url);
@@ -17,10 +12,6 @@ async function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoad
             header: true,
             skipEmptyLines: true
         });
-        if (columnsToShow) {
-            renderTable(results.data, containerId, columnsToShow);
-        }
-
         if (onDataLoaded) {
             onDataLoaded(results.data);
         }
@@ -30,46 +21,38 @@ async function loadAndRenderCSV(filename, containerId, columnsToShow, onDataLoad
     }
 }
 
-function renderTable(data, containerId, columnsToShow, startIndex, endIndex) {
-    const container = document.getElementById(containerId);
-
-    if (!data || data.length === 0) {
-        container.innerHTML = '<p class="loading">No data found in file.</p>';
-        return;
-    }
-    
-    // Use provided columns or show all available columns
-    const cols = columnsToShow || Object.keys(data[0]);
-    const rowsToShow = (startIndex !== undefined) ? data.slice(startIndex, endIndex) : data;
-    
-    let tableHtml = '<table><thead><tr>';
-    cols.forEach(col => { tableHtml += `<th>${col}</th>`; });
-    tableHtml += '</tr></thead><tbody>';
-    rowsToShow.forEach(row => {
-        tableHtml += '<tr>';
-        cols.forEach(col => {
-            const cellValue = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
-            tableHtml += `<td>${cellValue}</td>`;
-        });
-        tableHtml += '</tr>';
-    });
-    tableHtml += '</tbody></table>';
-    container.innerHTML = tableHtml;
-}
-
 function renderPaginatedTable(data, containerId, columnsToShow, initialPage) {
     const ROWS_PER_PAGE = 5;
     const totalPages = Math.ceil(data.length / ROWS_PER_PAGE);
 
     function goToPage(page) {
+        const container = document.getElementById(containerId);
         const startIndex = (page - 1) * ROWS_PER_PAGE;
         const endIndex = Math.min(startIndex + ROWS_PER_PAGE, data.length);
+        const rowsToShow = data.slice(startIndex, endIndex);
 
-        renderTable(data, containerId, columnsToShow, startIndex, endIndex);
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p class="loading">No data found in file.</p>';
+            return;
+        }
+
+        const cols = columnsToShow || Object.keys(data[0]);
+        let tableHtml = '<table><thead><tr>';
+        cols.forEach(col => { tableHtml += `<th>${col}</th>`; });
+        tableHtml += '</tr></thead><tbody>';
+        rowsToShow.forEach(row => {
+            tableHtml += '<tr>';
+            cols.forEach(col => {
+                const cellValue = row[col] !== undefined && row[col] !== "" ? row[col] : "-";
+                tableHtml += `<td>${cellValue}</td>`;
+            });
+            tableHtml += '</tr>';
+        });
+        tableHtml += '</tbody></table>';
+        container.innerHTML = tableHtml;
 
         if (totalPages <= 1) return;
 
-        const container = document.getElementById(containerId);
         const nav = document.createElement('div');
         nav.className = 'pagination';
 
@@ -105,22 +88,16 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function getTrendDirection(values) {
-    if (values.length < 2) return 'flat';
-    const first = values[values.length - 1];
-    const last = values[0];
-    const diff = last - first;
-    if (Math.abs(diff) < 0.01) return 'flat';
-    return diff < 0 ? 'down' : 'up';
-}
-
 function calcWeightTrend(data) {
     const weightRecords = data.filter(row => row["Metric Type"] === "Weight" && row["Value 1"]);
     if (weightRecords.length === 0) return null;
     weightRecords.sort((a, b) => new Date(b.Date) - new Date(a.Date));
     const values = weightRecords.map(r => parseFloat(r["Value 1"]) || 0);
-    const trend = getTrendDirection(values);
-    return { values, trend, first: values[values.length - 1], last: values[0] };
+    const first = values[values.length - 1];
+    const last = values[0];
+    const diff = last - first;
+    const trend = values.length < 2 || Math.abs(diff) < 0.01 ? 'flat' : diff < 0 ? 'down' : 'up';
+    return { values, trend, first, last };
 }
 
 function calcHealthSummary(metricsData) {
@@ -150,7 +127,7 @@ function calcHealthSummary(metricsData) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    loadAndRenderCSV(FILES.logs, "logs-container", null, function(logData) {
+    loadAndRenderCSV('mypeptideapp_peptide_logs.csv', "logs-container", function(logData) {
         if (!logData || logData.length === 0) {
             document.getElementById('logs-container').innerHTML = '<p class="loading">No data found.</p>';
             return;
@@ -162,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Weight trend line chart
-    loadAndRenderCSV(FILES.metrics, "weight-trend-container", null, function(data) {
+    loadAndRenderCSV('mypeptideapp_health_metrics.csv', "weight-trend-container", function(data) {
         const container = document.getElementById('weight-trend-container');
         const weightRecords = data.filter(row => row["Metric Type"] === "Weight" && row["Value 1"]);
         
@@ -254,14 +231,13 @@ document.addEventListener("DOMContentLoaded", () => {
         container.appendChild(chartContainer);
     });
 
-    const metricColumns = ["Date", "Metric Type", "Value"];
-    loadAndRenderCSV(FILES.metrics, "metrics-container", null, function(data) {
+    loadAndRenderCSV('mypeptideapp_health_metrics.csv', "metrics-container", function(data) {
         const displayData = data.map(row => ({
             ...row,
             Date: row.Date ? row.Date.split(' ')[0] : row.Date,
             Value: `${row["Value 1"]} ${row.Unit}`.trim()
         }));
-        renderPaginatedTable(displayData, "metrics-container", metricColumns, 1);
+        renderPaginatedTable(displayData, "metrics-container", ["Date", "Metric Type", "Value"], 1);
         const weightTrend = calcWeightTrend(data);
         const healthSummary = calcHealthSummary(data);
 

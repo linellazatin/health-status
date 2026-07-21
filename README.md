@@ -1,4 +1,4 @@
-# Health Status Dashboard
+# Health Status Dashboard (for MyPeptideApp)
 
 Personal health tracking dashboard displaying peptide therapy data and health metrics.
 
@@ -6,10 +6,9 @@ Personal health tracking dashboard displaying peptide therapy data and health me
 
 - **Latest Weight Display**: Shows most recent weight measurement with trend indicator (up/down/stable)
 - **Health Summary Cards**: Total readings, first/latest weight, change in kg and percentage
-- **Dose Progression Timeline**: Visual timeline of all injections with dates and doses
+- **Dose Progression Table**: Paginated table of all injections with dates, doses, and injection sites
+- **Weight Trend Chart**: SVG line chart of all weight readings with interactive hover tooltips
 - **Health Metrics Table**: Displays tracked health metrics with dates and values
-- **Pain Level Tracking**: Pain level bar chart per injection with severity labels
-- **Weekly Injection Summary**: Bar chart and table of weekly injection counts and total doses
 
 ## How It Works
 
@@ -27,9 +26,8 @@ Data is parsed using **PapaParse** library to handle CSV parsing in the browser.
 - Vanilla JavaScript with PapaParse for CSV processing
 - Dynamic table generation from parsed CSV data
 - Weight trend calculation and visualization
-- Dose progression timeline rendering
-- Pain level tracking with severity indicators
-- Weekly injection summary charts
+- Paginated dose progression table
+- SVG weight trend line chart with interactive hover tooltips
 - No backend required - all processing happens client-side
 
 ## Infrastructure
