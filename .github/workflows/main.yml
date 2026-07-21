@@ -8,14 +8,10 @@ jobs:
     steps:
       - name: Send Google Chat Message
         run: |
-          # cleanup commit msg
-          COMMIT_MSG=$(cat << 'EOF' | jq -Rs .
+          COMMIT_MSG=$(cat << 'EOF' | jq -Rrs .
           ${{ github.event.head_commit.message }}
           EOF
           )
-          # remove additional spaces
-          COMMIT_MSG=${COMMIT_MSG#\"}
-          COMMIT_MSG=${COMMIT_MSG%\"}
 
           curl -X POST -H "Content-Type: application/json" \
           -d "{
