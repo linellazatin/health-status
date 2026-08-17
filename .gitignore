@@ -5,8 +5,9 @@
 .env*
 !.env.example
 
-# opencode plans
-.opencode
+# backups
+*.backup
 
 # playwright output
 .playwright-mcp
+test-visual.js
