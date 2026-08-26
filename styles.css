@@ -41,8 +41,8 @@
   --ol-yellow: #e8c14a;
   --ol-orange: #e2712b;
   --ol-green: #6fae6b;
-  --ol-mono: "Fira Code", ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
-  --ol-sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+  --ol-mono: "Newsreader", ui-monospace, monospace;
+  --ol-sans: "Inter", system-ui, sans-serif;
   --bg-color: var(--ol-bg);
   --surface-color: var(--ol-bg-raised);
   --border-color: var(--ol-line);
@@ -50,8 +50,8 @@
   --text-muted: var(--ol-fg-dim);
   --cf-orange: var(--ol-yellow);
   --hover-bg: var(--ol-bg-raised);
-  --trend-up: var(--ol-green);
-  --trend-down: var(--ol-orange);
+  --trend-up: var(--ol-orange);
+  --trend-down: var(--ol-green);
   --trend-flat: var(--ol-fg-dim);
   --accent-blue: var(--ol-yellow);
 }

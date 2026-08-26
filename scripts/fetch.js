@@ -175,8 +175,9 @@ function calcWeightTrend(data) {
     weightRecords.sort((a, b) => new Date(b.Date) - new Date(a.Date));
     const values = weightRecords.map(r => parseFloat(r["Value 1"]) || 0);
     const first = values[values.length - 1];
+    const recent = values[1];
     const last = values[0];
-    const diff = last - first;
+    const diff = last - recent;
     const trend = values.length < 2 || Math.abs(diff) < 0.01 ? 'flat' : diff < 0 ? 'down' : 'up';
     return { values, trend, first, last };
 }
