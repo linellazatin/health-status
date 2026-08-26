@@ -1,7 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="geometricPrecision">
-  <rect x="4" y="4" width="24" height="24" rx="3" fill="#0d0d0b"/>
-  <circle cx="16" cy="16" r="7" fill="#e8c14a"/>
-  <g fill="none" stroke="#f2efe6" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M22.55 9.45 15.4 22.55H22.55"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- openlines-circle-white-1440 -->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1095 1095"
+  width="1095"
+  height="1095"
+>
+  <!-- Smooth bounding circle -->
+  <circle
+    cx="550"
+    cy="550"
+    r="464"
+    fill="#000000"
+  />
+
+  <!-- Openlines mark -->
+  <g transform="translate(191.24 265.15) scale(0.6345)">
+    <path
+      d="M 914 180
+         C 850 270 790 370 700 470
+         C 620 560 560 650 470 700
+         C 350 770 210 715 190 590
+         C 170 470 250 350 370 340
+         C 500 330 610 390 700 470
+         C 770 530 780 650 850 690
+         C 885 710 915 700 935 680"
+      fill="none"
+      stroke="#fffeff"
+      stroke-width="42"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
   </g>
 </svg>
