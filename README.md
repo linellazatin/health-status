@@ -40,7 +40,7 @@ Deployed as a static asset site using **Cloudflare Pages**.
 
 Uses `wrangler.jsonc` for Cloudflare deployment:
 
-- Assets directory: root (`.`)
+- Assets directory: `./public`
 - Node.js compatibility flags enabled
 - Observability tracking enabled
 

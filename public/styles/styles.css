@@ -12,10 +12,7 @@
   50%       { box-shadow: 0 0 0 5px rgba(111, 174, 107, 0.18); }
 }
 
-@keyframes brand-glow {
-  0%, 100% { filter: drop-shadow(0 0 1px rgba(232, 193, 74, 0.2)); }
-  50% { filter: drop-shadow(0 0 4px rgba(232, 193, 74, 0.6)) drop-shadow(0 0 7px rgba(242, 239, 230, 0.16)); }
-}
+
 
 @keyframes page-fade {
   from { opacity: 0; transform: translateY(6px); }
@@ -33,11 +30,11 @@
 
 /* ── Tokens ─────────────────────────────────────────────────────────── */
 :root {
-  --ol-bg: #0d0d0b;
-  --ol-bg-raised: #17170f;
+  --ol-bg: #050505;
+  --ol-bg-raised: #0a0a09;
   --ol-fg: #f2efe6;
   --ol-fg-dim: #8c8a7d;
-  --ol-line: #2b2a24;
+  --ol-line: #2a2a23;
   --ol-yellow: #e8c14a;
   --ol-orange: #e2712b;
   --ol-green: #6fae6b;
@@ -129,13 +126,7 @@ a:hover { color: var(--ol-yellow); }
   align-items: center;
   gap: 8px;
 }
-.ol-brand__mark {
-  width: 22px;
-  height: 22px;
-  flex: 0 0 auto;
-  display: block;
-  animation: brand-glow 3s ease-in-out infinite;
-}
+
 
 /* ── Navigation ─────────────────────────────────────────────────────── */
 .ol-nav {
