@@ -32,9 +32,9 @@ Data is parsed using **PapaParse** library to handle CSV parsing in the browser.
 
 ## Infrastructure
 
-### Hosting: Cloudflare Pages
+### Hosting: Cloudflare Workers
 
-Deployed as a static asset site using **Cloudflare Pages**.
+Deployed as a static asset site using **Cloudflare Workers static assets**.
 
 ### Configuration: Wrangler
 
@@ -46,7 +46,7 @@ Uses `wrangler.jsonc` for Cloudflare deployment:
 
 ### Deployment
 
-Drop-and-deploy static files to Cloudflare Pages. No build step required in current configuration.
+Run `npx wrangler deploy` from the repository root. No build step is required; Wrangler uploads `public/` as the asset directory.
 
 ## Data Source
 

@@ -14,13 +14,12 @@ A static personal health tracking dashboard displaying peptide therapy data and 
   - `mypeptideapp_peptide_logs.csv` - Injection records
   - `mypeptideapp_health_metrics.csv` - Health measurements
 - **Visualization**: Vanilla JS, SVG charts, paginated tables
-- **Timestamp**: Fetches latest commit from GitHub API on load + every 60s
+- **Timestamp**: Fetches the latest `main` commit's committer date from GitHub API on page load
 
 ## Configuration and installation
 - **No install required** - all dependencies are CDN-hosted
 - **Wrangler**: `wrangler.jsonc` configures Cloudflare deployment
   - Assets directory: `./public`
-  - Node.js compatibility flags enabled
   - Observability tracking enabled
 - **GitHub Actions**: `.github/workflows/main.yml` runs on push
 
@@ -29,11 +28,11 @@ A static personal health tracking dashboard displaying peptide therapy data and 
 - **Timestamp API**: Falls back to "see GitHub" if GitHub API fails
 - **CSV parsing**: PapaParse handles malformed CSV gracefully
 - **No build artifacts** - deploy directly from `public/`
-- **No lint/typecheck** - pure static files
+- **No lint or typecheck command** - pure static files
 
 ## Key files
 - `public/index.html` - Single-page dashboard
-- `public/styles.css` - Openlines design system (dark mode, exact blacks)
+- `public/styles/styles.css` - Openlines design system (dark mode, exact blacks)
 - `public/scripts/fetch.js` - CSV loading, data processing, chart rendering
 - `public/scripts/timestamp.js` - GitHub commit timestamp fetcher
 - `public/mypeptideapp_*.csv` - Data exports from MyPeptideApp
@@ -44,7 +43,7 @@ A static personal health tracking dashboard displaying peptide therapy data and 
 1. CSV files load via `fetch()` from `public/` directory
 2. PapaParse converts CSV to JSON arrays
 3. `fetch.js` calculates trends, summaries, and renders tables/charts
-4. `timestamp.js` fetches GitHub commit date every 60s
+4. `timestamp.js` fetches the latest GitHub `main` commit date
 5. All rendering happens client-side - no server processing
 
 ## Security
@@ -54,8 +53,8 @@ A static personal health tracking dashboard displaying peptide therapy data and 
 
 ## Key absences
 - No build step
-- No linting or type checking
-- No test suite
+- Timestamp tests run with `node --test tests/timestamp.test.js`
+- No lint or typecheck command
 - No documentation beyond README and AGENTS.md
 - No Docker or containerization
 

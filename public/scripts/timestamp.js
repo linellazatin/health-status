@@ -1,46 +1,45 @@
-// Fetch and display the last commit date from GitHub
+// Display the latest main-branch commit time from GitHub.
+function formatCommitDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        throw new Error('Invalid commit date');
+    }
+
+    const parts = Object.fromEntries(
+        new Intl.DateTimeFormat('en-US', {
+            weekday: 'short',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hourCycle: 'h23'
+        }).formatToParts(date).map(({ type, value: part }) => [type, part])
+    );
+
+    return `${parts.weekday}, ${parts.day} ${parts.month} ${parts.year} @ ${parts.hour}:${parts.minute}:${parts.second}`;
+}
+
 async function updateTimestamp() {
-    const repo = 'linellazatin/health-status';
-    const branch = 'main';
-    
+    const timestampEl = document.querySelector('.ol-timestamp');
+
     try {
-        console.log('Fetching timestamp from GitHub...');
-        const response = await fetch(`https://api.github.com/repos/${repo}/commits?sha=${branch}&per_page=1`);
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('GitHub API error:', errorText);
-            throw new Error(`GitHub API error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Commit data:', data);
-        
-        // GitHub returns an array, take the first commit
-        const commit = data[0];
-        const commitDate = new Date(commit.commit.author.date);
-        
-        // Format: "Wed, 29 Aug 2026 @ 04:06:52" (viewer's local time)
-        const dayOfWeek = commitDate.toLocaleDateString('en-US', { weekday: 'short' });
-        const day = commitDate.toLocaleDateString('en-US', { day: 'numeric' });
-        const month = commitDate.toLocaleDateString('en-US', { month: 'short' });
-        const year = commitDate.getFullYear();
-        const time = commitDate.toLocaleTimeString('en-US', { hour12: false });
-        const formattedDate = `${dayOfWeek}, ${day} ${month} ${year} @ ${time}`;
-        
-        const timestampEl = document.querySelector('.ol-timestamp');
-        if (timestampEl) {
-            timestampEl.textContent = `Last updated: ${formattedDate}`;
-        }
+        const response = await fetch(
+            'https://api.github.com/repos/linellazatin/health-status/commits?sha=main&per_page=1',
+            { headers: { Accept: 'application/vnd.github+json' } }
+        );
+        if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+
+        const [latestCommit] = await response.json();
+        const commitDate = latestCommit?.commit?.committer?.date;
+        if (!commitDate) throw new Error('GitHub response has no committer date');
+
+        if (timestampEl) timestampEl.textContent = `Last updated: ${formatCommitDate(commitDate)}`;
     } catch (error) {
         console.error('Failed to fetch timestamp:', error);
-        const timestampEl = document.querySelector('.ol-timestamp');
-        if (timestampEl) {
-            timestampEl.textContent = 'Last updated: see GitHub';
-        }
+        if (timestampEl) timestampEl.textContent = 'Last updated: see GitHub';
     }
 }
 
-updateTimestamp();
-document.addEventListener('DOMContentLoaded', updateTimestamp);
+if (typeof window !== 'undefined') updateTimestamp();
