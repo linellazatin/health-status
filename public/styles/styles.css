@@ -1,24 +1,6 @@
 /* Health Dashboard — openlines Design System */
 /* Base: openlines-system v1.0 + dashboard overrides */
 
-/* ── Keyframes ─────────────────────────────────────────────────────── */
-@keyframes blink-caret {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
-
-@keyframes dot-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(111, 174, 107, 0); }
-  50%       { box-shadow: 0 0 0 5px rgba(111, 174, 107, 0.18); }
-}
-
-
-
-@keyframes page-fade {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 /* ── Font ───────────────────────────────────────────────────────────── */
 @font-face {
   font-family: "Fira Code";
@@ -38,7 +20,7 @@
   --ol-yellow: #e8c14a;
   --ol-orange: #e2712b;
   --ol-green: #6fae6b;
-  --ol-mono: "Newsreader", ui-monospace, monospace;
+  --ol-mono: "Fira Code", ui-monospace, monospace;
   --ol-sans: "Inter", system-ui, sans-serif;
   --bg-color: var(--ol-bg);
   --surface-color: var(--ol-bg-raised);
@@ -219,7 +201,7 @@ h2 {
 .ol-dot--yellow { background: var(--ol-yellow); }
 .ol-dot--orange { background: var(--ol-orange); }
 .ol-dot--green { background: var(--ol-green); }
-.ol-dot--pulse { animation: dot-pulse 3s ease-in-out infinite; }
+
 
 /* ── Stat Display ───────────────────────────────────────────────────── */
 .ol-stat {
@@ -479,8 +461,7 @@ footer a:hover { color: var(--ol-fg); }
 
 /* ── Reduced Motion ─────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .ol-brand__mark { animation: none; }
-  .ol-dot--pulse { animation: none; }
+  * { animation: none !important; }
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────── */

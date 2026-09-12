@@ -1,8 +1,6 @@
 // Health Dashboard Data Loading
 // Ponytail: minimal functional enhancements
 
-let lastUpdatedTime = null;
-
 async function loadAndRenderCSV(filename, containerId, onDataLoaded = null) {
     try {
         const url = window.location.origin + '/' + filename;
@@ -10,10 +8,7 @@ async function loadAndRenderCSV(filename, containerId, onDataLoaded = null) {
         if (!response.ok) {
             throw new Error(`Failed to load ${filename}: ${response.status} ${response.statusText}`);
         }
-        
-        lastUpdatedTime = new Date();
-        updateLastUpdatedUI();
-        
+
         let text = await response.text();
         if (text.charCodeAt(0) === 0xFEFF) {
             text = text.slice(1);
@@ -58,24 +53,6 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
-
-function updateLastUpdatedUI() {
-    const footer = document.querySelector('.ol-footer__inner');
-    if (!footer || !lastUpdatedTime) return;
-    
-    let timestampEl = footer.querySelector('.ol-timestamp');
-    if (!timestampEl) {
-        timestampEl = document.createElement('span');
-        timestampEl.className = 'ol-timestamp';
-        footer.insertBefore(timestampEl, footer.firstChild);
-    }
-    
-    const timeStr = lastUpdatedTime.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-    timestampEl.textContent = `Updated ${timeStr}`;
 }
 
 function renderPaginatedTable(data, containerId, columnsToShow, initialPage) {

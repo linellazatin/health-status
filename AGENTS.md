@@ -1,62 +1,47 @@
 # Health Status Dashboard
 
 ## What this is
-A static personal health tracking dashboard displaying peptide therapy data and health metrics. No build process, no framework, no runtime dependencies beyond PapaParse (CDN).
+A static personal health dashboard for MyPeptideApp exports. It uses vanilla HTML, CSS, and JavaScript to render weight summaries, dose records, health metrics, and an SVG weight chart in the browser.
 
 ## Commands
-- **Run locally**: `npx serve public/` or `python3 -m http.server -d public`
-- **Deploy**: `npx wrangler deploy` (Cloudflare Workers static assets)
-- **Test API**: `curl https://api.github.com/repos/linellazatin/health-status/commits?sha=main&per_page=1`
+- **Run locally:** `npx serve public/`
+- **Alternative local server:** `python3 -m http.server -d public`
+- **Run tests:** `node --test tests/timestamp.test.js`
+- **Deploy:** `npx wrangler deploy`
+
+There is no build step. There is no lint or typecheck command.
 
 ## Architecture
-- **Static site** served from `public/` directory
-- **Data source**: Two CSV files loaded client-side via PapaParse
-  - `mypeptideapp_peptide_logs.csv` - Injection records
-  - `mypeptideapp_health_metrics.csv` - Health measurements
-- **Visualization**: Vanilla JS, SVG charts, paginated tables
-- **Timestamp**: Fetches latest commit from GitHub API on load + every 60s
+- `public/` is the complete deployable asset directory.
+- `public/index.html` provides the page shell and footer timestamp element.
+- `public/scripts/fetch.js` loads the two CSV assets with PapaParse, calculates summaries and trends, renders tables, and builds the SVG chart.
+- `public/scripts/timestamp.js` fetches the latest `main` commit from the GitHub API and displays its committer date in the viewer's local timezone as `Last updated: Sun, 13 Sep 2026 @ 03:06:23`.
+- `public/styles/styles.css` contains the openlines-inspired dark visual system and responsive dashboard styles.
 
 ## Configuration and installation
-- **No install required** - all dependencies are CDN-hosted
-- **Wrangler**: `wrangler.jsonc` configures Cloudflare deployment
-  - Assets directory: `./public`
-  - Node.js compatibility flags enabled
-  - Observability tracking enabled
-- **GitHub Actions**: `.github/workflows/main.yml` runs on push
+No package installation is required for the site. PapaParse is loaded from its CDN in `index.html`.
+
+`wrangler.jsonc` deploys `./public` as Cloudflare Workers static assets. Observability is enabled. Files outside `public/` are not deployed as site assets.
 
 ## Testing and operational quirks
-- **Browser cache**: Hard refresh (Ctrl+Shift+R) when testing timestamp updates
-- **Timestamp API**: Falls back to "see GitHub" if GitHub API fails
-- **CSV parsing**: PapaParse handles malformed CSV gracefully
-- **No build artifacts** - deploy directly from `public/`
-- **No lint/typecheck** - pure static files
+- Timestamp tests use Node's built-in test runner and mock the browser fetch/DOM boundary.
+- The timestamp uses GitHub's unauthenticated API, so rate limits or API failures display `Last updated: see GitHub`.
+- Timestamp formatting uses the viewer's local timezone, not UTC.
+- CSV files are public browser assets and contain the dashboard's source data.
+- Hard-refresh the browser when testing changed static assets through a cached local or deployed page.
 
 ## Key files
-- `public/index.html` - Single-page dashboard
-- `public/styles.css` - Openlines design system (dark mode, exact blacks)
-- `public/scripts/fetch.js` - CSV loading, data processing, chart rendering
-- `public/scripts/timestamp.js` - GitHub commit timestamp fetcher
-- `public/mypeptideapp_*.csv` - Data exports from MyPeptideApp
-- `wrangler.jsonc` - Cloudflare deployment config
-- `.github/workflows/main.yml` - CI pipeline
+- `public/index.html` - Dashboard document shell
+- `public/scripts/fetch.js` - CSV loading and dashboard rendering
+- `public/scripts/timestamp.js` - GitHub commit timestamp
+- `public/styles/styles.css` - Page styling and responsive rules
+- `public/mypeptideapp_health_metrics.csv` - Health metric data
+- `public/mypeptideapp_peptide_logs.csv` - Peptide log data
+- `tests/timestamp.test.js` - Timestamp behavior tests
+- `wrangler.jsonc` - Cloudflare deployment configuration
+- `.github/workflows/main.yml` - Push notification workflow
 
-## Data flow
-1. CSV files load via `fetch()` from `public/` directory
-2. PapaParse converts CSV to JSON arrays
-3. `fetch.js` calculates trends, summaries, and renders tables/charts
-4. `timestamp.js` fetches GitHub commit date every 60s
-5. All rendering happens client-side - no server processing
+## Important constraints
+Keep all deployable HTML, CSS, JavaScript, CSV, and image assets under `public/`. Keep timestamp ownership in `timestamp.js`; do not reintroduce a competing timestamp updater in `fetch.js`.
 
-## Security
-- No authentication or user data storage
-- CSV files are public assets in the repository
-- GitHub API calls are unauthenticated (rate-limited to 60/min)
-
-## Key absences
-- No build step
-- No linting or type checking
-- No test suite
-- No documentation beyond README and AGENTS.md
-- No Docker or containerization
-
-<!-- opl-init:fp eee8f3046289c3aa -->
+<!-- opl-init:fp c29d16e73dad0b75 -->
