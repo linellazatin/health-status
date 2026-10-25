@@ -184,7 +184,7 @@ function calcHealthSummary(metricsData) {
         prevDate: prevRecord ? formatDate(prevRecord.Date) : null,
     };
 }
-
+// Kept as legacy for dots
 function getTrendElement(trend, values) {
     const trendConfig = {
         down: { class: 'down', dot: 'ol-dot--green' },
@@ -193,7 +193,6 @@ function getTrendElement(trend, values) {
     };
     const config = trendConfig[trend];
     return `<div class="trend-indicator ${config.class}">
-        <span class="ol-dot ${config.dot}"></span>
         ${trend === 'down' ? 'Weight ↓' : trend === 'up' ? 'Weight ↑' : 'Stable'}
     </div>`;
 }
