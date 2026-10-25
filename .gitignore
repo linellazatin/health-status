@@ -11,3 +11,6 @@
 # playwright output
 .playwright-mcp
 test-visual.js
+
+# annoying
+.DS_Store
